@@ -1,6 +1,6 @@
 ;;;; package.lisp
 
 (defpackage #:weblocks-twitter-bootstrap-application
-  (:use #:cl #:weblocks)
+  (:use #:cl #:weblocks #:ps #:cl-who)
   (:export #:twitter-bootstrap-webapp))
 
