@@ -2,7 +2,7 @@
 
 (asdf:defsystem #:weblocks-twitter-bootstrap-application
   :serial t
-  :description "Describe weblocks-twitter-bootstrap-application here"
+  :description "Bootstrap skin for weblocks"
   :author "Olexiy Zamkoviy <olexiy.z@gmail.com>"
   :license "LLGPL"
   :depends-on (:cl-mustache :weblocks :yaclml)
