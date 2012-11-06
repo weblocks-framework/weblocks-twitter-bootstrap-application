@@ -8,9 +8,9 @@
   margin: 0;
 }
 
-.gridedit .pagination .page-info {
-  bottom: 30px;
+.gridedit .pagination .pagination-inner {
   position: absolute;
+  bottom: 0px;
 }
 
 .gridedit .total-items {

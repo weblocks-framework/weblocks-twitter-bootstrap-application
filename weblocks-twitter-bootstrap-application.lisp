@@ -26,18 +26,16 @@
           (lambda (&rest args)
             (setf (hunchentoot::header-out :content-type) "text/css")
             nil)))
-    (push (hunchentoot:create-regex-dispatcher 
-            "^/pub/stylesheets/dataform-import.css$" 
-            empty-css-action) weblocks::*dispatch-table*) 
-    (push (hunchentoot:create-regex-dispatcher 
-            "^/pub/stylesheets/dataseq.css$" 
-            empty-css-action) weblocks::*dispatch-table*)
-    (push (hunchentoot:create-regex-dispatcher 
-            "^/pub/stylesheets/datagrid.css$" 
-            empty-css-action) weblocks::*dispatch-table*)
-    (push (hunchentoot:create-regex-dispatcher 
-            "^/pub/stylesheets/table.css$" 
-            empty-css-action) weblocks::*dispatch-table*)))
+    (flet ((add-empty-css-action (regex)
+             (push (hunchentoot:create-regex-dispatcher 
+                     regex
+                     empty-css-action) weblocks::*dispatch-table*)))
+      (add-empty-css-action "^/pub/stylesheets/dataform-import.css$")
+      (add-empty-css-action "^/pub/stylesheets/pagination.css$")
+      (add-empty-css-action "^/pub/stylesheets/flash.css$")
+      (add-empty-css-action "^/pub/stylesheets/dataseq.css$")
+      (add-empty-css-action "^/pub/stylesheets/datagrid.css$")
+      (add-empty-css-action "^/pub/stylesheets/table.css$"))))
 
 (defmethod initialize-instance :after ((self twitter-bootstrap-webapp) &key ignore-default-dependencies &allow-other-keys)
   (unless ignore-default-dependencies
@@ -395,3 +393,68 @@ being rendered.
     (:input :name (attributize-name name) :type "submit" :id id :class class
 	    :value value :onclick "disableIrrelevantButtons(this);")
     (str "&nbsp;")))
+
+(defmethod render-widget-body ((obj pagination) &rest args) 
+  (declare (ignore args)
+           (special *request-hook*))
+  (when (> (pagination-page-count obj) 0)
+    (with-html 
+      (:div :class "pagination-inner"
+      ; 'Previous' link
+      (:div :class "pull-left"
+       (when (> (pagination-current-page obj) 1)
+	(render-link (lambda (&rest args)
+                       (declare (ignore args))
+		       (when (> (pagination-current-page obj) 1)
+			 (decf (pagination-current-page obj))
+			 (pagination-call-on-change obj)))
+		     (humanize-name "< Previous")
+		     :class "previous-page btn")
+	(str "&nbsp;")))
+      ; 'Viewing Page X of Y'
+      (:span :class "page-info pull-left"
+	     (:span :class "viewing-label" "Viewing ")
+	     (:span :class "page-label" "Page ")
+	     (:span :class "current-page" (:strong (str (pagination-current-page obj))))
+	     (:span :class "of-label" " of ")
+	     (:span :class "total-pages" (str (pagination-page-count obj))))
+      ; 'Next' link
+      (:div :class "pull-left"
+       (when (< (pagination-current-page obj)
+	       (pagination-page-count obj))
+	(str "&nbsp;")
+	(render-link (lambda (&rest args)
+                       (declare (ignore args))
+		       (when (< (pagination-current-page obj)
+				(pagination-page-count obj))
+			 (incf (pagination-current-page obj))
+			 (pagination-call-on-change obj)))
+		     (humanize-name "Next >")
+		     :class "next-page btn")))
+      ; Go to page
+      (when (> (pagination-page-count obj) 1)
+        (htm 
+          (:div :class "pull-left"
+           "&nbsp;")
+          (:div :class "pull-left form-inline"
+           (with-html-form (:get (curry #'pagination-on-go-to-page obj))
+             (:div :class "pull-left"
+              (:label (:span "Go to page:&nbsp;")
+               (:input :name "page-number"
+                :type "text"
+                :class (concatenate 'string
+                                    "page-number input-small"
+                                    (when (slot-value obj 'last-request-error-p)
+                                      " item-not-validated"))
+                :onfocus (concatenate 'string
+                                      "$(this).removeClassName(\"item-not-validated\");"
+                                      (when (/= (pagination-current-page obj) 1)
+                                        "if(this.value == \"1\") { this.value = \"\"; }"))
+                :onblur (when (/= (pagination-current-page obj) 1)
+                          "if(this.value == \"\") { this.value = \"1\"; }")
+                :value (when (/= (pagination-current-page obj) 1)
+                         "1"))))
+             (:div :class "pull-left"
+               (render-button "go-to-page" :value "Go"))))))
+      ; Total items
+      (pagination-render-total-item-count obj)))))
