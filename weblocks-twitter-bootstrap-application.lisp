@@ -382,3 +382,16 @@
         (when caption
           (htm (:span :class "caption" (str caption) ":&nbsp;")))
 	(:span :class "message" (str message)))))
+
+(defun render-button (name  &key (value (humanize-name name)) id (class "submit btn"))
+  "Renders a button in a form.
+
+'name' - name of the html control. The name is attributized before
+being rendered.
+'value' - a value on html control. Humanized name is default.
+'id' - id of the html control. Default is nil.
+'class' - a class used for styling. By default, \"submit\"."
+  (with-html
+    (:input :name (attributize-name name) :type "submit" :id id :class class
+	    :value value :onclick "disableIrrelevantButtons(this);")
+    (str "&nbsp;")))
