@@ -372,3 +372,13 @@
 	       (apply #'render-table-view-body-row view obj widget :row-action row-action args)))
 	(safe-apply (sequence-view-row-suffix-fn view) view obj args))
       (call-next-method)))
+
+(in-package :weblocks)
+
+(defun render-message (message &optional caption)
+  "Renders a message to the user with standardized markup."
+  (with-html
+    (:p :class "user-message well"
+        (when caption
+          (htm (:span :class "caption" (str caption) ":&nbsp;")))
+	(:span :class "message" (str message)))))
