@@ -199,7 +199,7 @@
                  (let ((required-indicator (weblocks::form-view-field-required-indicator field)))
                    (when (and (form-view-field-required-p field)
                               required-indicator)
-                     (htm (:em :class "required-slot"
+                     (htm (:em :class "required-slot text-warning"
                            (if (eq t required-indicator)
                              (str *default-required-indicator*)
                              (str required-indicator))
@@ -330,3 +330,45 @@
       (with-html-form (:get (make-action (curry #'dataseq-operations-action obj))
                        :class "operations-form")
                       (render-operations)))))
+
+; Copied from weblocks/src/views/tableview.lisp
+(defmethod with-table-view-header ((view table-view) obj widget header-fn rows-fn &rest args
+                                                     &key summary &allow-other-keys)
+  (with-html
+    (:table :class "table-striped table-bordered" :summary (or summary (table-view-default-summary view))
+     (when (view-caption view)
+       (htm (:caption (str (view-caption view)))))
+     (htm
+       (:thead
+         (apply header-fn view (car obj) widget args))
+       (:tbody
+         (apply rows-fn view obj widget args))))))
+
+; Copied from weblocks/src/widgets/datagrid/drilldown.lisp
+(defmethod with-table-view-body-row ((view table-view) obj (widget datagrid) &rest args
+				     &key alternp &allow-other-keys)
+  (if (and (dataseq-allow-drilldown-p widget)
+	   (dataseq-on-drilldown widget))
+      (let ((row-action (make-action
+			 (lambda (&rest args)
+			   (declare (ignore args))
+			   (when (dataseq-autoset-drilled-down-item-p widget)
+			     (setf (dataseq-drilled-down-item widget) obj))
+			   (funcall (cdr (dataseq-on-drilldown widget)) widget obj))))
+	    (drilled-down-p (and (dataseq-drilled-down-item widget)
+				 (eql (object-id (dataseq-drilled-down-item widget))
+				      (object-id obj)))))
+	(safe-apply (sequence-view-row-prefix-fn view) view obj args)
+	(with-html
+	  (:tr :class (when (or alternp drilled-down-p)
+			(concatenate 'string
+				     (when alternp "altern")
+				     (when (and alternp drilled-down-p) " ")
+				     (when drilled-down-p "drilled-down info")))
+	       :onclick (format nil "initiateActionOnEmptySelection(\"~A\", \"~A\");"
+				row-action (session-name-string-pair))
+	       :onmouseover "this.style.cursor = \"pointer\";"
+	       :style "cursor: expression(\"hand\");"
+	       (apply #'render-table-view-body-row view obj widget :row-action row-action args)))
+	(safe-apply (sequence-view-row-suffix-fn view) view obj args))
+      (call-next-method)))

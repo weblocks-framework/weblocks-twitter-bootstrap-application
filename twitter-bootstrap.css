@@ -16,3 +16,7 @@
 .gridedit .total-items {
   float: right;
 }
+
+.gridedit .drilled-down input {
+  display: none;
+}
