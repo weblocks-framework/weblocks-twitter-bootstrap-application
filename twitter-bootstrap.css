@@ -1,0 +1,18 @@
+.nowrap {
+  white-space: nowrap;
+}
+
+.gridedit .pagination {
+  height:0px;
+  position:relative;
+  margin: 0;
+}
+
+.gridedit .pagination .page-info {
+  bottom: 30px;
+  position: absolute;
+}
+
+.gridedit .total-items {
+  float: right;
+}

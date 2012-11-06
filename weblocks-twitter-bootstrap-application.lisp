@@ -17,11 +17,27 @@
           (merge-pathnames 
             "twitter-bootstrap-dialog.js"
             (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
-  (push (hunchentoot:create-regex-dispatcher 
-          "^/pub/stylesheets/dataform-import.css$" 
+  (push (hunchentoot:create-static-file-dispatcher-and-handler 
+          "/pub/stylesheets/twitter-bootstrap.css"
+          (merge-pathnames 
+            "twitter-bootstrap.css"
+            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
+  (let ((empty-css-action 
           (lambda (&rest args)
             (setf (hunchentoot::header-out :content-type) "text/css")
-            nil)) weblocks::*dispatch-table*))
+            nil)))
+    (push (hunchentoot:create-regex-dispatcher 
+            "^/pub/stylesheets/dataform-import.css$" 
+            empty-css-action) weblocks::*dispatch-table*) 
+    (push (hunchentoot:create-regex-dispatcher 
+            "^/pub/stylesheets/dataseq.css$" 
+            empty-css-action) weblocks::*dispatch-table*)
+    (push (hunchentoot:create-regex-dispatcher 
+            "^/pub/stylesheets/datagrid.css$" 
+            empty-css-action) weblocks::*dispatch-table*)
+    (push (hunchentoot:create-regex-dispatcher 
+            "^/pub/stylesheets/table.css$" 
+            empty-css-action) weblocks::*dispatch-table*)))
 
 (defmethod initialize-instance :after ((self twitter-bootstrap-webapp) &key ignore-default-dependencies &allow-other-keys)
   (unless ignore-default-dependencies
@@ -60,6 +76,7 @@
 }
 </style>
     <link href=\"/bootstrap/css/bootstrap.min.css\" rel=\"stylesheet\" media=\"screen\">
+    <link href=\"/pub/stylesheets/twitter-bootstrap.css\" rel=\"stylesheet\" media=\"screen\">
     <script src=\"http://code.jquery.com/jquery-latest.js\"></script>
     <script src=\"/pub/scripts/twitter-bootstrap-dialog.js\"></script>
     <script src=\"/bootstrap/js/bootstrap.min.js\"></script>
@@ -70,6 +87,7 @@
   </body>
 </html>")
 
+; Copied from weblocks/src/page-template.lisp
 (defmethod render-page ((app twitter-bootstrap-webapp))
   (declare (special weblocks::*page-dependencies*))
   (let* ((rendered-html (get-output-stream-string weblocks:*weblocks-output-stream*))
@@ -90,6 +108,7 @@
           (:header-content . ,header-content)
           (:body-content . ,body-content))))))
 
+; Copied from weblocks/src/page-template.lisp
 (defmethod render-page-body ((app twitter-bootstrap-webapp) body-string)
   (with-html
     (:div :class "page-wrapper container"
@@ -97,6 +116,7 @@
 	  (cl-who:htm (str body-string))
 	  (render-extra-tags "page-extra-bottom-" 3))))
 
+; Copied from weblocks/src/utils/html.lisp
 (defmacro with-html-form ((method-type action &key id class enctype (use-ajax-p t) extra-submit-code
                           (submit-fn "initiateFormAction(\"~A\", $(this), \"~A\")")) &body body)
   "Transforms to cl-who (:form) with standard form code (AJAX support, actions, etc.)"
@@ -117,6 +137,7 @@
                         (:input :name weblocks::*action-string* :type "hidden" :value ,action-code))))))
        (log-form ,action-code :id ,id :class ,class))))
 
+; Copied from weblocks/src/views/formview/formview.lisp
 (defmethod with-view-header ((view form-view) obj widget body-fn &rest args &key
 			     (method (form-view-default-method view))
 			     (action (form-view-default-action view))
@@ -152,6 +173,7 @@
     (when (form-view-focus-p view)
         (send-script (ps* `((@ ($ ,form-id) focus-first-element)))))))
 
+; Copied from weblocks/src/views/formview/formview.lisp
 (defmethod render-view-field ((field form-view-field) (view form-view)
 			      widget presentation value obj 
 			      &rest args &key validation-errors field-info &allow-other-keys)
@@ -192,6 +214,7 @@
           (htm (:p :class "help-inline"
                 (str (format nil "~A" (cdr validation-error)))))))))))
 
+; Copied from weblocks/src/views/formview/formview.lisp
 (defmethod render-form-view-buttons ((view form-view) obj widget &rest args &key form-view-buttons &allow-other-keys)
     (declare (ignore obj args))
     (flet ((find-button (name)
@@ -220,6 +243,7 @@
                               :value (or (cdr cancel)
                                          (humanize-name (car cancel)))))))))))
 
+; Copied from weblocks/src/views/formview/formview.lisp
 (defmethod render-validation-summary ((view form-view) obj widget errors)
   (declare (ignore view obj))
   (when errors
@@ -248,3 +272,61 @@
                         (:li
                           (str (format nil "~A" (cdr err))))))
                     field-errors)))))))))
+
+; Copied from weblocks/src/widgets/datagrid/sort.lisp
+(defmethod render-view-field-header ((field table-view-field) (view table-view)
+				     (widget datagrid) presentation value obj 
+				     &rest args &key field-info
+				     &allow-other-keys)
+  (declare (ignore args))
+  (if (dataseq-field-sortable-p widget field)
+    (let* ((slot-name (view-field-slot-name field))
+           (slot-path (get-field-info-sort-path field-info))
+           (th-class (when (equalp slot-path (dataseq-sort-path widget))
+                       (concatenate 'string " sort-"
+                                    (attributize-name (string (dataseq-sort-direction widget))))))
+           (sort-dir (dataseq-sort-direction widget)))
+      (with-html
+        (:th :class (concatenate 'string
+                                 (if field-info
+                                   (attributize-view-field-name field-info)
+                                   (attributize-name slot-name))
+                                 th-class)
+             (render-link
+               (make-action
+                 (lambda (&rest args)
+                   (declare (ignore args))
+                   (let ((new-dir :asc))
+                     (when (equalp (dataseq-sort-path widget) slot-path)
+                       (setf new-dir (negate-sort-direction sort-dir)))
+                     (setf (dataseq-sort widget) (cons slot-path new-dir)))
+                   ;; we also need to clear the selection
+                   (dataseq-clear-selection widget)))
+               
+               (with-html-output-to-string (s)
+                 (:span (str (view-field-label field))
+                  (str "&nbsp;"))
+                 (if (equalp slot-path (dataseq-sort-path widget))
+                   (htm (:i :class (if (equal (dataseq-sort-direction widget) :asc) "icon-chevron-up" "icon-chevron-down")))
+                   (htm (:i :class "icon-white"))) 
+                 s)
+               :class "nowrap"))))
+      (call-next-method)))
+
+; Copied from weblocks/src/widgets/dataseq/dataseq.lisp
+(defmethod dataseq-render-operations-default ((obj dataseq) &rest args)
+  (declare (ignore args))
+  (flet ((render-operations ()
+           (with-html
+             (:div :class "operations pull-right btn-group"
+              (mapc (lambda (op)
+                      (render-button (car op) :class "submit btn"))
+                    (append
+                      (dataseq-common-ops obj)
+                      (when (dataseq-allow-select-p obj)
+                        (dataseq-item-ops obj))))))))
+    (if (dataseq-wrap-body-in-form-p obj)
+      (render-operations)
+      (with-html-form (:get (make-action (curry #'dataseq-operations-action obj))
+                       :class "operations-form")
+                      (render-operations)))))
