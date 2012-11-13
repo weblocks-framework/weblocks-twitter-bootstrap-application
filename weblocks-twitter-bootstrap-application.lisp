@@ -22,6 +22,11 @@
           (merge-pathnames 
             "twitter-bootstrap.css"
             (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
+  (push (hunchentoot:create-static-file-dispatcher-and-handler 
+          "/pub/scripts/jquery-1.8.2.js"
+          (merge-pathnames 
+            "jquery-1.8.2.js"
+            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
   (let ((empty-css-action 
           (lambda (&rest args)
             (setf (hunchentoot::header-out :content-type) "text/css")
@@ -60,7 +65,7 @@
   position: fixed;
   right: 0;
   top: 0;
-  z-index: 1000;
+  z-index: 10000000;
 }
 
 /* IE 6 specific progress bar fix */
@@ -75,7 +80,7 @@
 </style>
     <link href=\"/bootstrap/css/bootstrap.min.css\" rel=\"stylesheet\" media=\"screen\">
     <link href=\"/pub/stylesheets/twitter-bootstrap.css\" rel=\"stylesheet\" media=\"screen\">
-    <script src=\"http://code.jquery.com/jquery-latest.js\"></script>
+    <script src=\"/pub/scripts/jquery-1.8.2.js\"></script>
     <script src=\"/pub/scripts/twitter-bootstrap-dialog.js\"></script>
     <script src=\"/bootstrap/js/bootstrap.min.js\"></script>
     {{{header-content}}}
