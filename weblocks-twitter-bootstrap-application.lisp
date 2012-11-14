@@ -463,3 +463,19 @@ being rendered.
                (render-button "go-to-page" :value "Go"))))))
       ; Total items
       (pagination-render-total-item-count obj)))))
+
+(defmethod render-widget-body ((obj flash) &rest args)
+  (declare (special *on-ajax-complete-scripts* *dirty-widgets*))
+  (let ((messages (flash-messages-to-show obj)))
+    (when messages
+      (with-html
+	(:div :class "view"
+	      (with-extra-tags
+		(htm
+		 (:div :class "messages clearfix"
+		      (mapc (lambda (msg)
+                      (htm (:div :class "alert" 
+                            (:button :type "button" :class "close" :data-dismiss "alert" "x")
+                            (apply #'render-widget msg args))))
+			    messages))))))
+      (send-script (ps* `((@ ($ ,(dom-id obj)) show)))))))
