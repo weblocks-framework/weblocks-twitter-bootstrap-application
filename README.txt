@@ -39,3 +39,11 @@ oz@debian> ln -s ../../jquery-seq/jquery-seq.js .                               
 oz@debian>                                                                                                                                                                                     ~/projects/temporary/pub/scripts
 
 
+Also you can use following snippet for initial app for testing, it should be pretty displayed when all is ok. 
+
+(defun init-user-session (root)
+  (setf (widget-children root)
+	(list (lambda (&rest args)
+		(with-html
+		  (:div :class "page-header" (:h1 "Happy Hacking!")))))))
+
