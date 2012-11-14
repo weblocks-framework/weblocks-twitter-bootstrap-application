@@ -1,5 +1,8 @@
 An attempt to use twitter-bootstrap as html base for weblocks applications.
 
+At this moment weblocks dependencies system should not work with this theme, but I'm using and recommend jquery-seq for dependencies and I have no problems with it.
+I don't know will dependencies work in future or not.
+
 To use this theme load this package and use following snippet when defining application. You need also to add jquery-seq and weblocks-jquery scripts to pub/scripts directory.
 
 ; Example of defwebapp
