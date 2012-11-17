@@ -479,3 +479,61 @@ being rendered.
                             (apply #'render-widget msg args))))
 			    messages))))))
       (send-script (ps* `((@ ($ ,(dom-id obj)) show)))))))
+
+(defmethod dataedit-create-drilldown-widget ((grid gridedit) item)
+  (make-instance 'dataform
+                 :data item
+                 :dom-class "well"
+                 :class-store (dataseq-class-store grid)
+                 :ui-state (if (eql (gridedit-drilldown-type grid) :edit)
+                             :form
+                             :data)
+                 :on-success (lambda (obj)
+                               (declare (ignore obj))
+                               (flash-message (dataseq-flash grid)
+                                              (format nil "Modified ~A."
+                                                      (humanize-name (dataseq-data-class grid))))
+                               (if (eql (gridedit-drilldown-type grid) :edit)
+                                 (progn
+                                   (dataedit-reset-state grid)
+                                   (throw 'annihilate-dataform nil))
+                                 (mark-dirty grid)))
+                 :on-cancel (when (eql (gridedit-drilldown-type grid) :edit)
+                              (lambda (obj)
+                                (declare (ignore obj))
+                                (dataedit-reset-state grid)
+                                (throw 'annihilate-dataform nil)))
+                 :on-close (lambda (obj)
+                             (declare (ignore obj))
+                             (dataedit-reset-state grid))
+                 :data-view (dataedit-item-data-view grid)
+                 :form-view (dataedit-item-form-view grid)))
+
+(defmethod dataedit-create-new-item-widget ((grid gridedit))
+  (make-instance 'dataform
+                 :dom-class "well"
+                 :data (make-instance (dataseq-data-form-class grid))
+                 :class-store (dataseq-class-store grid)
+                 :ui-state :form
+                 :on-cancel (lambda (obj)
+                              (declare (ignore obj))
+                              (dataedit-reset-state grid)
+                              (throw 'annihilate-dataform nil))
+                 :on-success (lambda (obj)
+                               (safe-funcall (dataedit-on-add-item grid) grid (dataform-data obj))
+                               (safe-funcall (dataedit-on-add-item-completed grid) grid (dataform-data obj))
+                               (when (or (dataedit-mixin-flash-message-on-first-add-p grid)
+                                         (> (dataseq-data-count grid) 1))
+                                 (flash-message (dataseq-flash grid)
+                                                (format nil "Added ~A."
+                                                        (humanize-name (dataseq-data-class grid)))))
+                               (dataedit-reset-state grid)
+                               (throw 'annihilate-dataform nil))
+                 :data-view (dataedit-item-data-view grid)
+                 :form-view (dataedit-item-form-view grid)))
+
+(defmethod render-view-field-header-value (value presentation (field table-view-field) (view table-view) widget obj &rest args)
+  (declare (ignore args))
+  (with-html
+    (:span :class "label-bootstrap" (str (view-field-label field)))))
+
