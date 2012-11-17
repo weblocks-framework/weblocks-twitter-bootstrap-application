@@ -20,3 +20,15 @@
 .gridedit .drilled-down input {
   display: none;
 }
+
+.gridedit .alert p {
+    margin-bottom: 0;
+}
+
+.gridedit th.select {
+    width: 10px;
+}
+
+.gridedit table {
+    width: 100%;
+}
