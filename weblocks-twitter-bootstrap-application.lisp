@@ -27,6 +27,12 @@
           (merge-pathnames 
             "jquery-1.8.2.js"
             (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
+  (push (hunchentoot:create-static-file-dispatcher-and-handler 
+          "/pub/scripts/datagrid.js"
+          (merge-pathnames 
+            "datagrid.js"
+            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
+
   (let ((empty-css-action 
           (lambda (&rest args)
             (setf (hunchentoot::header-out :content-type) "text/css")
