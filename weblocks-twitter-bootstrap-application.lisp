@@ -159,7 +159,9 @@
 	   (let ((*weblocks-output-stream* (make-string-output-stream)))
 	     (with-html
                (arnesi:awhen (view-caption view)
-                 (cl-who:htm (:h1 (cl-who:fmt (view-caption view) (humanize-name (object-class-name obj))))))
+                 (cl-who:htm 
+                   (:h1 (cl-who:fmt (view-caption view) (humanize-name (object-class-name obj))))
+                   (:hr)))
 	       (render-validation-summary view obj widget validation-errors)
 	       (safe-apply fields-prefix-fn view obj args)
 	       (apply body-fn view obj args)
