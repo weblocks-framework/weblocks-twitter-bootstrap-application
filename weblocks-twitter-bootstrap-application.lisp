@@ -502,3 +502,32 @@ being rendered.
   (with-html
     (:span :class "label-bootstrap" (str (view-field-label field)))))
 
+; Copied from weblocks/src/views/types/presentations/checkboxes.lisp 
+(defmethod render-view-field  ((field form-view-field) (view form-view)
+                                                       widget (presentation checkboxes-presentation) value obj
+                                                       &rest args &key validation-errors &allow-other-keys)
+  (let* ((attribute-slot-name (attributize-name (view-field-slot-name field)))
+         (validation-error (assoc attribute-slot-name validation-errors
+                                  :test #'string-equal
+                                  :key #'view-field-slot-name))
+         (field-class (concatenate 'string attribute-slot-name
+                                   (when validation-error " item-not-validated"))))
+    (with-html
+      (:div :class field-class
+            (:label :class "control-label"
+                    (:span :class "slot-name"
+                           (:span :class "extra"
+                                  (str (view-field-label field)) ":&nbsp;"
+                                  (when (form-view-field-required-p field)
+                                    (htm (:em :class "required-slot" "(required)&nbsp;"))))))
+            (:div :class (format nil "control-group ~A" (when validation-error "warning"))
+             (apply #'render-view-field-value
+                    value presentation
+                    field view widget obj
+                    args) 
+             (when validation-error
+               (htm (:p :class "validation-error"
+                     (:em
+                       (:span :class "validation-error-heading" "Error:&nbsp;")
+                       (str (format nil "~A" (cdr validation-error))))))))))))
+
