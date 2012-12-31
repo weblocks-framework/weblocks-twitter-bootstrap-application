@@ -6,53 +6,58 @@
   ()
   (:metaclass weblocks:webapp-class))
 
+; +weblocks-normal-theme-compatible
 (defmethod initialize-webapp :before ((app twitter-bootstrap-webapp))
-  (push (hunchentoot:create-folder-dispatcher-and-handler 
-          "/bootstrap/" 
-          (merge-pathnames 
-            (make-pathname :directory '(:relative "bootstrap-compiled"))
-            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
-  (push (hunchentoot:create-static-file-dispatcher-and-handler 
-          "/pub/scripts/twitter-bootstrap-dialog.js"
-          (merge-pathnames 
-            "twitter-bootstrap-dialog.js"
-            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
-  (push (hunchentoot:create-static-file-dispatcher-and-handler 
-          "/pub/stylesheets/twitter-bootstrap.css"
-          (merge-pathnames 
-            "twitter-bootstrap.css"
-            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
-  (push (hunchentoot:create-static-file-dispatcher-and-handler 
-          "/pub/scripts/jquery-1.8.2.js"
-          (merge-pathnames 
-            "jquery-1.8.2.js"
-            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
-  (push (hunchentoot:create-static-file-dispatcher-and-handler 
-          "/pub/scripts/datagrid.js"
-          (merge-pathnames 
-            "datagrid.js"
-            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
+  (flet ((prepend-webapp-path (value)
+           (format nil "~A~A" (weblocks::weblocks-webapp-prefix app) value)))
+    (push (hunchentoot:create-folder-dispatcher-and-handler 
+            (prepend-webapp-path "/bootstrap/") 
+            (merge-pathnames 
+              (make-pathname :directory '(:relative "bootstrap-compiled"))
+              (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
+    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+            (prepend-webapp-path "/pub/scripts/twitter-bootstrap-dialog.js")
+            (merge-pathnames 
+              "twitter-bootstrap-dialog.js"
+              (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
+    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+            (prepend-webapp-path "/pub/stylesheets/twitter-bootstrap.css")
+            (merge-pathnames 
+              "twitter-bootstrap.css"
+              (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
+    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+            (prepend-webapp-path "/pub/scripts/jquery-1.8.2.js")
+            (merge-pathnames 
+              "jquery-1.8.2.js"
+              (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
+    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+            (prepend-webapp-path "/pub/scripts/datagrid.js")
+            (merge-pathnames 
+              "datagrid.js"
+              (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)) 
 
   (let ((empty-css-action 
           (lambda (&rest args)
             (setf (hunchentoot::header-out :content-type) "text/css")
             nil)))
     (flet ((add-empty-css-action (regex)
+             (setf regex (format nil "^~A~A$" (weblocks::weblocks-webapp-prefix app) regex))
              (push (hunchentoot:create-regex-dispatcher 
                      regex
                      empty-css-action) weblocks::*dispatch-table*)))
-      (add-empty-css-action "^/pub/stylesheets/dataform-import.css$")
-      (add-empty-css-action "^/pub/stylesheets/pagination.css$")
-      (add-empty-css-action "^/pub/stylesheets/flash.css$")
-      (add-empty-css-action "^/pub/stylesheets/dataseq.css$")
-      (add-empty-css-action "^/pub/stylesheets/datagrid.css$")
-      (add-empty-css-action "^/pub/stylesheets/table.css$"))))
+      (add-empty-css-action "/pub/stylesheets/dataform-import.css")
+      (add-empty-css-action "/pub/stylesheets/pagination.css")
+      (add-empty-css-action "/pub/stylesheets/flash.css")
+      (add-empty-css-action "/pub/stylesheets/dataseq.css")
+      (add-empty-css-action "/pub/stylesheets/datagrid.css")
+      (add-empty-css-action "/pub/stylesheets/table.css"))))
 
+; +weblocks-normal-theme-compatible +not-tested
 (defmethod initialize-instance :after ((self twitter-bootstrap-webapp) &key ignore-default-dependencies &allow-other-keys)
   (unless ignore-default-dependencies
     (setf (weblocks::weblocks-webapp-application-dependencies self)
-          '((:script "jquery-seq")
-            (:script "weblocks-jquery")))))
+          '((:script "jquery-seq" :default t)
+            (:script "weblocks-jquery" :default t)))))
 
 (defmacro capture-weblocks-output (&body body)
   `(let ((*weblocks-output-stream* (make-string-output-stream)))
@@ -84,11 +89,11 @@
   top: expression(documentElement.scrollTop + 'px');
 }
 </style>
-    <link href=\"/bootstrap/css/bootstrap.min.css\" rel=\"stylesheet\" media=\"screen\">
-    <link href=\"/pub/stylesheets/twitter-bootstrap.css\" rel=\"stylesheet\" media=\"screen\">
-    <script src=\"/pub/scripts/jquery-1.8.2.js\"></script>
-    <script src=\"/pub/scripts/twitter-bootstrap-dialog.js\"></script>
-    <script src=\"/bootstrap/js/bootstrap.min.js\"></script>
+    <link href=\"{{webapp-files-prefix}}/bootstrap/css/bootstrap.min.css\" rel=\"stylesheet\" media=\"screen\">
+    <link href=\"{{webapp-files-prefix}}/pub/stylesheets/twitter-bootstrap.css\" rel=\"stylesheet\" media=\"screen\">
+    <script src=\"{{webapp-files-prefix}}/pub/scripts/jquery-1.8.2.js\"></script>
+    <script src=\"{{webapp-files-prefix}}/pub/scripts/twitter-bootstrap-dialog.js\"></script>
+    <script src=\"{{webapp-files-prefix}}/bootstrap/js/bootstrap.min.js\"></script>
     {{{header-content}}}
   </head>
   <body>
@@ -97,8 +102,16 @@
 </html>")
 
 ; Copied from weblocks/src/page-template.lisp
+; +weblocks-normal-theme-compatible +not-tested
 (defmethod render-page ((app twitter-bootstrap-webapp))
   (declare (special weblocks::*page-dependencies*))
+  (setf (weblocks::weblocks-webapp-application-dependencies app)
+        (loop for i in (weblocks::weblocks-webapp-application-dependencies app) 
+              collect (if (and 
+                            (listp i)
+                            (getf i :default))
+                        (make-local-dependency (first i) (second i) :do-not-probe t)
+                        i)))
   (let* ((rendered-html (get-output-stream-string weblocks:*weblocks-output-stream*))
          (all-dependencies (timing "compact-dependencies"
                                    (compact-dependencies (append (webapp-application-dependencies)
@@ -110,14 +123,18 @@
                          (render-page-body app rendered-html)
                          (with-html 
                            (:div :id "ajax-progress" "&nbsp;")
-                           (with-javascript "updateWidgetStateFromHash();")))))
+                           (with-javascript "updateWidgetStateFromHash();"))))
+         (webapp-files-prefix (weblocks::weblocks-webapp-prefix app)))
+
     (let ((mustache:*mustache-output* weblocks:*weblocks-output-stream*))
       (twitter-bootstrap-template 
         `((:title . ,(application-page-title app))
           (:header-content . ,header-content)
-          (:body-content . ,body-content))))))
+          (:body-content . ,body-content)
+          (:webapp-files-prefix . ,webapp-files-prefix))))))
 
 ; Copied from weblocks/src/page-template.lisp
+; +weblocks-normal-theme-compatible +not-tested
 (defmethod render-page-body ((app twitter-bootstrap-webapp) body-string)
   (with-html
     (:div :class "page-wrapper container"
@@ -125,29 +142,17 @@
 	  (cl-who:htm (str body-string))
 	  (render-extra-tags "page-extra-bottom-" 3))))
 
-; Copied from weblocks/src/utils/html.lisp
-(defmacro with-html-form ((method-type action &key id class enctype (use-ajax-p t) extra-submit-code
-                          (submit-fn "initiateFormAction(\"~A\", $(this), \"~A\")")) &body body)
-  "Transforms to cl-who (:form) with standard form code (AJAX support, actions, etc.)"
-  (let ((action-code (gensym)))
-    `(let ((,action-code (function-or-action->action ,action)))
-       (with-html
-         (:form :id ,id :class ,class :action (request-uri-path)
-                :method (attributize-name ,method-type) :enctype ,enctype
-                :onsubmit (when ,use-ajax-p
-                            (format nil "~@[~A~]~A; return false;"
-				    ,extra-submit-code
-                                    (format nil ,submit-fn
-                                            (hunchentoot:url-encode (or ,action-code ""))
-                                            (session-name-string-pair))))
-                (with-extra-tags
-                  (cl-who:htm (:fieldset
-                        ,@body
-                        (:input :name weblocks::*action-string* :type "hidden" :value ,action-code))))))
-       (log-form ,action-code :id ,id :class ,class))))
+(defun in-bootstrap-application-p ()
+  (subtypep (class-of (current-webapp)) 'twitter-bootstrap-webapp))
+
+
+(defmacro return-normal-value-when-theme-not-used (function)
+  `(unless (in-bootstrap-application-p)
+     (return-from ,function (call-next-method))))
 
 ; Copied from weblocks/src/views/formview/formview.lisp
-(defmethod with-view-header ((view form-view) obj widget body-fn &rest args &key
+; +weblocks-normal-theme-compatible
+(defmethod with-view-header :around ((view form-view) obj widget body-fn &rest args &key
 			     (method (form-view-default-method view))
 			     (action (form-view-default-action view))
 			     (fields-prefix-fn (view-fields-default-prefix-fn view))
@@ -155,6 +160,9 @@
 			     validation-errors
 			     &allow-other-keys)
   (declare (special *on-ajax-complete-scripts* *form-submit-dependencies*))
+
+  (return-normal-value-when-theme-not-used with-view-header)
+
   (let ((form-id (gen-id))
 	(header-class (format nil "view form form-horizontal ~A"
 			      (attributize-name (object-class-name obj)))))
@@ -185,10 +193,14 @@
         (send-script (ps* `((@ ($ ,form-id) focus-first-element)))))))
 
 ; Copied from weblocks/src/views/formview/formview.lisp
-(defmethod render-view-field ((field form-view-field) (view form-view)
+; +weblocks-normal-theme-compatible
+(defmethod render-view-field :around ((field form-view-field) (view form-view)
 			      widget presentation value obj 
 			      &rest args &key validation-errors field-info &allow-other-keys)
   (declare (special *presentation-dom-id*))
+
+  (return-normal-value-when-theme-not-used render-view-field)
+
   (let* ((attributized-slot-name (if field-info
                                    (attributize-view-field-name field-info)
                                    (attributize-name (view-field-slot-name field))))
@@ -226,37 +238,45 @@
                 (str (format nil "~A" (cdr validation-error)))))))))))
 
 ; Copied from weblocks/src/views/formview/formview.lisp
-(defmethod render-form-view-buttons ((view form-view) obj widget &rest args &key form-view-buttons &allow-other-keys)
-    (declare (ignore obj args))
-    (flet ((find-button (name)
-	     (arnesi:ensure-list
-	       (if form-view-buttons
-		   (find name form-view-buttons
-			 :key (lambda (item)
-				(car (arnesi:ensure-list item))))
-		 (find name (form-view-buttons view)
-		       :key (lambda (item)
-			      (car (arnesi:ensure-list item))))))))
-      (with-html
-        (:div :class "submit control-group"
-          (:div :class "controls"
-           (let ((submit (find-button :submit)))
-             (when submit
-               (render-button *submit-control-name*
-                              :value (or (cdr submit)
-                                         (humanize-name (car submit)))
-                              :class "submit btn btn-primary")))
-           (str "&nbsp;")
-           (let ((cancel (find-button :cancel)))
-             (when cancel
-               (render-button *cancel-control-name*
-                              :class "btn submit cancel"
-                              :value (or (cdr cancel)
-                                         (humanize-name (car cancel)))))))))))
+; +weblocks-normal-theme-compatible
+(defmethod render-form-view-buttons :around ((view form-view) obj widget &rest args &key form-view-buttons &allow-other-keys)
+  (declare (ignore obj args))
+
+  (return-normal-value-when-theme-not-used render-form-view-buttons)
+
+  (flet ((find-button (name)
+           (arnesi:ensure-list
+             (if form-view-buttons
+               (find name form-view-buttons
+                     :key (lambda (item)
+                            (car (arnesi:ensure-list item))))
+               (find name (form-view-buttons view)
+                     :key (lambda (item)
+                            (car (arnesi:ensure-list item))))))))
+    (with-html
+      (:div :class "submit control-group"
+        (:div :class "controls"
+         (let ((submit (find-button :submit)))
+           (when submit
+             (render-button *submit-control-name*
+                            :value (or (cdr submit)
+                                       (humanize-name (car submit)))
+                            :class "submit btn btn-primary")))
+         (str "&nbsp;")
+         (let ((cancel (find-button :cancel)))
+           (when cancel
+             (render-button *cancel-control-name*
+                            :class "btn submit cancel"
+                            :value (or (cdr cancel)
+                                       (humanize-name (car cancel)))))))))))
 
 ; Copied from weblocks/src/views/formview/formview.lisp
-(defmethod render-validation-summary ((view form-view) obj widget errors)
+; +weblocks-normal-theme-compatible +not-tested
+(defmethod render-validation-summary :around ((view form-view) obj widget errors)
   (declare (ignore view obj))
+
+  (return-normal-value-when-theme-not-used render-validation-summary)
+
   (when errors
     (let ((non-field-errors (weblocks::find-all errors #'null :key #'car))
           (field-errors (weblocks::find-all errors (arnesi:compose #'not #'null) :key #'car)))
@@ -285,11 +305,15 @@
                     field-errors)))))))))
 
 ; Copied from weblocks/src/widgets/datagrid/sort.lisp
-(defmethod render-view-field-header ((field table-view-field) (view table-view)
+; +weblocks-normal-theme-compatible +not-tested
+(defmethod render-view-field-header :around ((field table-view-field) (view table-view)
 				     (widget datagrid) presentation value obj 
 				     &rest args &key field-info
 				     &allow-other-keys)
   (declare (ignore args))
+
+  (return-normal-value-when-theme-not-used render-view-field-header)
+
   (if (dataseq-field-sortable-p widget field)
     (let* ((slot-name (view-field-slot-name field))
            (slot-path (get-field-info-sort-path field-info))
@@ -325,8 +349,12 @@
       (call-next-method)))
 
 ; Copied from weblocks/src/widgets/dataseq/dataseq.lisp
-(defmethod dataseq-render-operations-default ((obj dataseq) &rest args)
+; +weblocks-normal-theme-compatible +not-tested
+(defmethod dataseq-render-operations-default :around ((obj dataseq) &rest args)
   (declare (ignore args))
+
+  (return-normal-value-when-theme-not-used dataseq-render-operations-default)
+
   (flet ((render-operations ()
            (with-html
              (:div :class "operations pull-right btn-group"
@@ -343,8 +371,12 @@
                       (render-operations)))))
 
 ; Copied from weblocks/src/views/tableview.lisp
-(defmethod with-table-view-header ((view table-view) obj widget header-fn rows-fn &rest args
+; +weblocks-normal-theme-compatible +not-tested
+(defmethod with-table-view-header :around ((view table-view) obj widget header-fn rows-fn &rest args
                                                      &key summary &allow-other-keys)
+
+  (return-normal-value-when-theme-not-used with-table-view-header)
+
   (with-html
     (:table :class "table-striped table-bordered" :summary (or summary (table-view-default-summary view))
      (when (view-caption view)
@@ -356,8 +388,12 @@
          (apply rows-fn view obj widget args))))))
 
 ; Copied from weblocks/src/widgets/datagrid/drilldown.lisp
-(defmethod with-table-view-body-row ((view table-view) obj (widget datagrid) &rest args
+; +weblocks-normal-theme-compatible +not-tested
+(defmethod with-table-view-body-row :around ((view table-view) obj (widget datagrid) &rest args
 				     &key alternp &allow-other-keys)
+
+  (return-normal-value-when-theme-not-used with-table-view-body-row)
+
   (if (and (dataseq-allow-drilldown-p widget)
 	   (dataseq-on-drilldown widget))
       (let ((row-action (make-action
@@ -386,6 +422,7 @@
 
 (in-package :weblocks)
 
+; +weblocks-normal-theme-compatible
 (defun render-message (message &optional caption)
   "Renders a message to the user with standardized markup."
   (with-html
@@ -394,6 +431,9 @@
           (htm (:span :class "caption" (str caption) ":&nbsp;")))
 	(:span :class "message" (str message)))))
 
+(setf (symbol-function 'original-render-button) #'render-button)
+
+; +weblocks-normal-theme-compatible
 (defun render-button (name  &key (value (humanize-name name)) id (class "submit btn"))
   "Renders a button in a form.
 
@@ -407,9 +447,13 @@ being rendered.
 	    :value value :onclick "disableIrrelevantButtons(this);")
     (str "&nbsp;")))
 
+; +weblocks-normal-theme-compatible +not-tested
 (defmethod render-widget-body ((obj pagination) &rest args) 
   (declare (ignore args)
            (special *request-hook*))
+
+  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-widget-body)
+
   (when (> (pagination-page-count obj) 0)
     (with-html 
       (:div :class "pagination-inner"
@@ -474,6 +518,9 @@ being rendered.
 
 (defmethod render-widget-body ((obj flash) &rest args)
   (declare (special *on-ajax-complete-scripts* *dirty-widgets*))
+
+  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-widget-body)
+
   (let ((messages (flash-messages-to-show obj)))
     (when messages
       (with-html
@@ -490,6 +537,9 @@ being rendered.
 
 (defmethod render-widget-body ((obj gridedit) &rest args)
   (declare (ignore args))
+
+  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-widget-body)
+
   (dataedit-update-operations obj)
   (call-next-method)
   (when (dataedit-item-widget obj)
@@ -506,6 +556,9 @@ being rendered.
 (defmethod render-view-field  ((field form-view-field) (view form-view)
                                                        widget (presentation checkboxes-presentation) value obj
                                                        &rest args &key validation-errors &allow-other-keys)
+
+  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-view-field)
+
   (let* ((attribute-slot-name (attributize-name (view-field-slot-name field)))
          (validation-error (assoc attribute-slot-name validation-errors
                                   :test #'string-equal
