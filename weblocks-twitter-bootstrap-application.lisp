@@ -237,6 +237,14 @@
           (htm (:p :class "help-inline"
                 (str (format nil "~A" (cdr validation-error)))))))))))
 
+; +weblocks-normal-theme-compatible
+(defmethod render-view-field :around ((field form-view-field)
+                                      (view form-view)
+                                      widget
+                                      (presentation hidden-presentation)
+                                      value obj &rest args)
+  (declare (ignore field view widget presentation value obj args)))
+
 ; Copied from weblocks/src/views/formview/formview.lisp
 ; +weblocks-normal-theme-compatible
 (defmethod render-form-view-buttons :around ((view form-view) obj widget &rest args &key form-view-buttons &allow-other-keys)

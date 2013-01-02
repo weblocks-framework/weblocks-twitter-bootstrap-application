@@ -5,7 +5,7 @@
   :description "Bootstrap skin for weblocks"
   :author "Olexiy Zamkoviy <olexiy.z@gmail.com>"
   :license "LLGPL"
-  :version "0.0.6"
+  :version "0.0.7"
   :depends-on (:cl-mustache :weblocks :yaclml)
   :components ((:file "package")
                (:file "weblocks-twitter-bootstrap-application")))
