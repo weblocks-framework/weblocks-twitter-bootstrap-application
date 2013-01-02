@@ -9,7 +9,7 @@
 ; +weblocks-normal-theme-compatible
 (defmethod initialize-webapp :before ((app twitter-bootstrap-webapp))
   (flet ((prepend-webapp-path (value)
-           (format nil "~A~A" (weblocks::weblocks-webapp-prefix app) value)))
+           (format nil "~A~A" (string-right-trim "/" (weblocks::weblocks-webapp-prefix app)) value)))
     (push (hunchentoot:create-folder-dispatcher-and-handler 
             (prepend-webapp-path "/bootstrap/") 
             (merge-pathnames 
@@ -41,7 +41,7 @@
             (setf (hunchentoot::header-out :content-type) "text/css")
             nil)))
     (flet ((add-empty-css-action (regex)
-             (setf regex (format nil "^~A~A$" (weblocks::weblocks-webapp-prefix app) regex))
+             (setf regex (format nil "^~A~A$" (string-right-trim "/" (weblocks::weblocks-webapp-prefix app)) regex))
              (push (hunchentoot:create-regex-dispatcher 
                      regex
                      empty-css-action) weblocks::*dispatch-table*)))
@@ -124,7 +124,7 @@
                          (with-html 
                            (:div :id "ajax-progress" "&nbsp;")
                            (with-javascript "updateWidgetStateFromHash();"))))
-         (webapp-files-prefix (weblocks::weblocks-webapp-prefix app)))
+         (webapp-files-prefix (string-right-trim "/" (weblocks::weblocks-webapp-prefix app))))
 
     (let ((mustache:*mustache-output* weblocks:*weblocks-output-stream*))
       (twitter-bootstrap-template 
