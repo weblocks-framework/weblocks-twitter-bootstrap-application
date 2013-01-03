@@ -227,7 +227,7 @@
                              (str *default-required-indicator*)
                              (str required-indicator))
                            (str "&nbsp;"))))))))
-       (:div :class (format nil "control-group ~A" (when validation-error "warning"))
+       (:div :class (format nil "controls ~A" (when validation-error "warning"))
         (apply #'render-view-field-value
                value presentation
                field view widget obj
@@ -244,6 +244,50 @@
                                       (presentation hidden-presentation)
                                       value obj &rest args)
   (declare (ignore field view widget presentation value obj args)))
+
+; +weblocks-normal-theme-compatible
+(defmethod render-view-field :around ((field form-view-field) (view form-view)
+			      widget (presentation checkbox-presentation) value obj 
+			      &rest args &key validation-errors field-info &allow-other-keys)
+  (declare (special *presentation-dom-id*))
+
+  (return-normal-value-when-theme-not-used render-view-field)
+
+  (let* ((attributized-slot-name (if field-info
+                                   (attributize-view-field-name field-info)
+                                   (attributize-name (view-field-slot-name field))))
+	 (validation-error (assoc field validation-errors))
+	 (field-class (concatenate 'string (arnesi:aif attributized-slot-name attributized-slot-name "")
+				   (when validation-error " item-not-validated") " control-group"))
+         (*presentation-dom-id* (gen-id)))
+    (with-html
+      (:div :class field-class
+       (:label :class (format nil 
+                              "~A-presentation control-label" (attributize-presentation
+                                                                (view-field-presentation field)))
+               :for *presentation-dom-id*
+               (:span :class "slot-name"
+                (:span :class "extra"
+                 (unless (cl-containers:empty-p (view-field-label field))
+                   (str (view-field-label field))
+                   (str ":&nbsp;"))
+                 (let ((required-indicator (weblocks::form-view-field-required-indicator field)))
+                   (when (and (form-view-field-required-p field)
+                              required-indicator)
+                     (htm (:em :class "required-slot text-warning"
+                           (if (eq t required-indicator)
+                             (str *default-required-indicator*)
+                             (str required-indicator))
+                           (str "&nbsp;"))))))))
+       (:div :class (format nil "controls ~A" (when validation-error "warning"))
+        (apply #'render-view-field-value
+               value presentation
+               field view widget obj
+               :field-info field-info
+               args)
+        (when validation-error
+          (htm (:p :class "help-inline"
+                (str (format nil "~A" (cdr validation-error)))))))))))
 
 ; Copied from weblocks/src/views/formview/formview.lisp
 ; +weblocks-normal-theme-compatible
@@ -581,7 +625,7 @@ being rendered.
                                   (str (view-field-label field)) ":&nbsp;"
                                   (when (form-view-field-required-p field)
                                     (htm (:em :class "required-slot" "(required)&nbsp;"))))))
-            (:div :class (format nil "control-group ~A" (when validation-error "warning"))
+            (:div :class (format nil "controls ~A" (when validation-error "warning"))
              (apply #'render-view-field-value
                     value presentation
                     field view widget obj
