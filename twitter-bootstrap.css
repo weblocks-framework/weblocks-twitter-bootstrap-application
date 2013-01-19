@@ -10,7 +10,7 @@
 
 .gridedit .pagination .pagination-inner {
   position: absolute;
-  top: 0px;
+  top: -20px;
 }
 
 .gridedit .total-items {
