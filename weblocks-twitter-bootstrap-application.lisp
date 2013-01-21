@@ -3,7 +3,7 @@
 (in-package #:weblocks-twitter-bootstrap-application)
 
 (defclass twitter-bootstrap-webapp (weblocks:weblocks-webapp)
-  ()
+  ((responsiveness-enabled-p :initform t :initarg :responsiveness-enabled-p))
   (:metaclass weblocks:webapp-class))
 
 ; +weblocks-normal-theme-compatible
@@ -94,6 +94,10 @@
     <script src=\"{{webapp-files-prefix}}/pub/scripts/jquery-1.8.2.js\"></script>
     <script src=\"{{webapp-files-prefix}}/pub/scripts/twitter-bootstrap-dialog.js\"></script>
     <script src=\"{{webapp-files-prefix}}/bootstrap/js/bootstrap.min.js\"></script>
+    {{#responsiveness-enabled-p}}
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <link href=\"{{webapp-files-prefix}}/bootstrap/css/bootstrap-responsive.css\" rel=\"stylesheet\">
+    {{/responsiveness-enabled-p}}
     {{{header-content}}}
   </head>
   <body>
@@ -131,7 +135,8 @@
         `((:title . ,(application-page-title app))
           (:header-content . ,header-content)
           (:body-content . ,body-content)
-          (:webapp-files-prefix . ,webapp-files-prefix))))))
+          (:webapp-files-prefix . ,webapp-files-prefix)
+          (:responsiveness-enabled-p . ,(slot-value app 'responsiveness-enabled-p)))))))
 
 ; Copied from weblocks/src/page-template.lisp
 ; +weblocks-normal-theme-compatible +not-tested
