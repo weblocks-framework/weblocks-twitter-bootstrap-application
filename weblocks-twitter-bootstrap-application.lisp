@@ -10,27 +10,27 @@
 (defmethod initialize-webapp :before ((app twitter-bootstrap-webapp))
   (flet ((prepend-webapp-path (value)
            (format nil "~A~A" (string-right-trim "/" (weblocks::weblocks-webapp-prefix app)) value)))
-    (push (hunchentoot:create-folder-dispatcher-and-handler 
+    (push (weblocks:create-folder-dispatcher-and-handler 
             (prepend-webapp-path "/bootstrap/") 
             (merge-pathnames 
               (make-pathname :directory '(:relative "bootstrap-compiled"))
               (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
-    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+    (push (weblocks:create-static-file-dispatcher-and-handler 
             (prepend-webapp-path "/pub/scripts/twitter-bootstrap-dialog.js")
             (merge-pathnames 
               "twitter-bootstrap-dialog.js"
               (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
-    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+    (push (weblocks:create-static-file-dispatcher-and-handler 
             (prepend-webapp-path "/pub/stylesheets/twitter-bootstrap.css")
             (merge-pathnames 
               "twitter-bootstrap.css"
               (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
-    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+    (push (weblocks:create-static-file-dispatcher-and-handler 
             (prepend-webapp-path "/pub/scripts/jquery-1.8.2.js")
             (merge-pathnames 
               "jquery-1.8.2.js"
               (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
-    (push (hunchentoot:create-static-file-dispatcher-and-handler 
+    (push (weblocks:create-static-file-dispatcher-and-handler 
             (prepend-webapp-path "/pub/scripts/datagrid.js")
             (merge-pathnames 
               "datagrid.js"
