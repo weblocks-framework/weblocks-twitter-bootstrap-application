@@ -429,20 +429,18 @@
 
 ; Copied from weblocks/src/views/tableview.lisp
 ; +weblocks-normal-theme-compatible +not-tested
-(defmethod with-table-view-header :around ((view table-view) obj widget header-fn rows-fn &rest args
-                                                     &key summary &allow-other-keys)
-
-  (return-normal-value-when-theme-not-used with-table-view-header)
-
-  (with-html
-    (:table :class "table-striped table-bordered" :summary (or summary (table-view-default-summary view))
-     (when (view-caption view)
-       (htm (:caption (str (view-caption view)))))
+(defun bootstrap-striped-bordered-table-view-header-wt (&key caption summary header-content content)
+  (with-html-to-string
+    (:table :class "table-striped table-bordered" :summary summary 
+     (when caption
+       (htm (:caption (str caption))))
      (htm
        (:thead
-         (apply header-fn view (car obj) widget args))
+         (str header-content))
        (:tbody
-         (apply rows-fn view obj widget args))))))
+         (str content))))))
+
+(setf (symbol-function 'weblocks::table-view-header-wt) #'bootstrap-striped-bordered-table-view-header-wt)
 
 ; Copied from weblocks/src/widgets/datagrid/drilldown.lisp
 ; +weblocks-normal-theme-compatible +not-tested
