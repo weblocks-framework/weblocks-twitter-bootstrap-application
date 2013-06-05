@@ -503,7 +503,7 @@ being rendered.
     (str "&nbsp;")))
 
 ; +weblocks-normal-theme-compatible +not-tested
-(defmethod render-widget-body ((obj pagination) &rest args) 
+(defmethod render-widget-body :around ((obj pagination) &rest args) 
   (declare (ignore args)
            (special *request-hook*))
 
