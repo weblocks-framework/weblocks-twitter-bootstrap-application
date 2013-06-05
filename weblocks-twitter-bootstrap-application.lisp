@@ -440,7 +440,9 @@
        (:tbody
          (str content))))))
 
-(setf (symbol-function 'weblocks::table-view-header-wt) #'bootstrap-striped-bordered-table-view-header-wt)
+(deftemplate :table-view-header-wt 
+             #'bootstrap-striped-bordered-table-view-header-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/widgets/datagrid/drilldown.lisp
 ; +weblocks-normal-theme-compatible +not-tested
