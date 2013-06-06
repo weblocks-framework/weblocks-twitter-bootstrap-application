@@ -197,50 +197,30 @@
     (when (form-view-focus-p view)
         (send-script (ps* `((@ ($ ,form-id) focus-first-element)))))))
 
-; Copied from weblocks/src/views/formview/formview.lisp
-; +weblocks-normal-theme-compatible
-(defmethod render-view-field :around ((field form-view-field) (view form-view)
-			      widget presentation value obj 
-			      &rest args &key validation-errors field-info &allow-other-keys)
-  (declare (special *presentation-dom-id*))
+(defun form-view-field-wt (&key label-class id show-required-indicator required-indicator-label 
+                                show-field-label field-label validation-error content 
+                                field-class)
+  (with-html-to-string
+    (:div :class (format nil "control-group ~A" field-class)
+     (:label :class (format nil "~A control-label"label-class)
+      :for id
+      (:span :class "slot-name"
+       (:span :class "extra"
+        (when show-field-label
+          (str field-label)
+          (str ":&nbsp;"))
+        (when show-required-indicator
+          (htm (:em :class "required-slot text-warning"
+                (str required-indicator-label)
+                (str "&nbsp;")))))))
+     (:div :class (format nil "controls ~A" (when validation-error "warning"))
+      (str content)
+      (when validation-error
+        (htm (:p :class "help-inline"
+              (str validation-error))))))))
 
-  (return-normal-value-when-theme-not-used render-view-field)
-
-  (let* ((attributized-slot-name (if field-info
-                                   (attributize-view-field-name field-info)
-                                   (attributize-name (view-field-slot-name field))))
-	 (validation-error (assoc field validation-errors))
-	 (field-class (concatenate 'string (arnesi:aif attributized-slot-name attributized-slot-name "")
-				   (when validation-error " item-not-validated") " control-group"))
-         (*presentation-dom-id* (gen-id)))
-    (with-html
-      (:div :class field-class
-       (:label :class (format nil 
-                              "~A control-label"(attributize-presentation
-                                                  (view-field-presentation field)))
-               :for *presentation-dom-id*
-               (:span :class "slot-name"
-                (:span :class "extra"
-                 (unless (cl-containers:empty-p (view-field-label field))
-                   (str (view-field-label field))
-                   (str ":&nbsp;"))
-                 (let ((required-indicator (weblocks::form-view-field-required-indicator field)))
-                   (when (and (form-view-field-required-p field)
-                              required-indicator)
-                     (htm (:em :class "required-slot text-warning"
-                           (if (eq t required-indicator)
-                             (str *default-required-indicator*)
-                             (str required-indicator))
-                           (str "&nbsp;"))))))))
-       (:div :class (format nil "controls ~A" (when validation-error "warning"))
-        (apply #'render-view-field-value
-               value presentation
-               field view widget obj
-               :field-info field-info
-               args)
-        (when validation-error
-          (htm (:p :class "help-inline"
-                (str (format nil "~A" (cdr validation-error)))))))))))
+(deftemplate :form-view-field-wt #'form-view-field-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
 ; +weblocks-normal-theme-compatible
 (defmethod render-view-field :around ((field form-view-field)
@@ -252,8 +232,8 @@
 
 ; +weblocks-normal-theme-compatible
 (defmethod render-view-field :around ((field form-view-field) (view form-view)
-			      widget (presentation checkbox-presentation) value obj 
-			      &rest args &key validation-errors field-info &allow-other-keys)
+                                                              widget (presentation checkbox-presentation) value obj 
+                                                              &rest args &key validation-errors field-info &allow-other-keys)
   (declare (special *presentation-dom-id*))
 
   (return-normal-value-when-theme-not-used render-view-field)
@@ -261,29 +241,29 @@
   (let* ((attributized-slot-name (if field-info
                                    (attributize-view-field-name field-info)
                                    (attributize-name (view-field-slot-name field))))
-	 (validation-error (assoc field validation-errors))
-	 (field-class (concatenate 'string (arnesi:aif attributized-slot-name attributized-slot-name "")
-				   (when validation-error " item-not-validated") " control-group"))
+         (validation-error (assoc field validation-errors))
+         (field-class (concatenate 'string (arnesi:aif attributized-slot-name attributized-slot-name "")
+                                   (when validation-error " item-not-validated") " control-group"))
          (*presentation-dom-id* (gen-id)))
     (with-html
       (:div :class field-class
        (:label :class (format nil 
                               "~A-presentation control-label" (attributize-presentation
                                                                 (view-field-presentation field)))
-               :for *presentation-dom-id*
-               (:span :class "slot-name"
-                (:span :class "extra"
-                 (unless (cl-containers:empty-p (view-field-label field))
-                   (str (view-field-label field))
-                   (str ":&nbsp;"))
-                 (let ((required-indicator (weblocks::form-view-field-required-indicator field)))
-                   (when (and (form-view-field-required-p field)
-                              required-indicator)
-                     (htm (:em :class "required-slot text-warning"
-                           (if (eq t required-indicator)
-                             (str *default-required-indicator*)
-                             (str required-indicator))
-                           (str "&nbsp;"))))))))
+        :for *presentation-dom-id*
+        (:span :class "slot-name"
+         (:span :class "extra"
+          (unless (cl-containers:empty-p (view-field-label field))
+            (str (view-field-label field))
+            (str ":&nbsp;"))
+          (let ((required-indicator (weblocks::form-view-field-required-indicator field)))
+            (when (and (form-view-field-required-p field)
+                       required-indicator)
+              (htm (:em :class "required-slot text-warning"
+                    (if (eq t required-indicator)
+                      (str *default-required-indicator*)
+                      (str required-indicator))
+                    (str "&nbsp;"))))))))
        (:div :class (format nil "controls ~A" (when validation-error "warning"))
         (apply #'render-view-field-value
                value presentation
@@ -294,38 +274,28 @@
           (htm (:p :class "help-inline"
                 (str (format nil "~A" (cdr validation-error)))))))))))
 
-; Copied from weblocks/src/views/formview/formview.lisp
-; +weblocks-normal-theme-compatible
-(defmethod render-form-view-buttons :around ((view form-view) obj widget &rest args &key form-view-buttons &allow-other-keys)
-  (declare (ignore obj args))
+(defun form-view-buttons-wt (&key submit-html cancel-html)
+  (with-html-to-string
+    (:div :class "submit control-group"
+     (:div :class "controls"
+      (when submit-html 
+        (str submit-html))
+      (str "&nbsp;")
+      (when cancel-html 
+        (str cancel-html))))))
 
-  (return-normal-value-when-theme-not-used render-form-view-buttons)
+(deftemplate :form-view-buttons-wt #'form-view-buttons-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
-  (flet ((find-button (name)
-           (arnesi:ensure-list
-             (if form-view-buttons
-               (find name form-view-buttons
-                     :key (lambda (item)
-                            (car (arnesi:ensure-list item))))
-               (find name (form-view-buttons view)
-                     :key (lambda (item)
-                            (car (arnesi:ensure-list item))))))))
-    (with-html
-      (:div :class "submit control-group"
-        (:div :class "controls"
-         (let ((submit (find-button :submit)))
-           (when submit
-             (render-button *submit-control-name*
-                            :value (or (cdr submit)
-                                       (humanize-name (car submit)))
-                            :class "submit btn btn-primary")))
-         (str "&nbsp;")
-         (let ((cancel (find-button :cancel)))
-           (when cancel
-             (render-button *cancel-control-name*
-                            :class "btn submit cancel"
-                            :value (or (cdr cancel)
-                                       (humanize-name (car cancel)))))))))))
+
+(defun table-view-field-header-wt (&key row-class label)
+  (with-html-to-string
+    (:th :class row-class
+     (:span (str label)))))
+
+(deftemplate :table-view-field-header-wt 
+             #'table-view-field-header-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/views/formview/formview.lisp
 ; +weblocks-normal-theme-compatible +not-tested
@@ -372,8 +342,7 @@
   (return-normal-value-when-theme-not-used render-view-field-header)
 
   (if (dataseq-field-sortable-p widget field)
-    (let* ((slot-name (view-field-slot-name field))
-           (slot-path (get-field-info-sort-path field-info))
+    (let* ((slot-path (get-field-info-sort-path field-info))
            (th-class (when (equalp slot-path (dataseq-sort-path widget))
                        (concatenate 'string " sort-"
                                     (attributize-name (string (dataseq-sort-direction widget))))))
@@ -382,7 +351,7 @@
         (:th :class (concatenate 'string
                                  (if field-info
                                    (attributize-view-field-name field-info)
-                                   (attributize-name slot-name))
+                                   (attributize-name (view-field-slot-name field)))
                                  th-class)
              (render-link
                (make-action
@@ -395,13 +364,12 @@
                    ;; we also need to clear the selection
                    (dataseq-clear-selection widget)))
                
-               (with-html-output-to-string (s)
-                 (:span (str (view-field-label field))
+               (weblocks:with-html-to-string
+                 (:span (str (weblocks-util:translate (view-field-label field)))
                   (str "&nbsp;"))
                  (if (equalp slot-path (dataseq-sort-path widget))
                    (htm (:i :class (if (equal (dataseq-sort-direction widget) :asc) "icon-chevron-up" "icon-chevron-down")))
-                   (htm (:i :class "icon-white"))) 
-                 s)
+                   (htm (:i :class "icon-white"))))
                :class "nowrap"))))
       (call-next-method)))
 
@@ -477,6 +445,35 @@
 	(safe-apply (sequence-view-row-suffix-fn view) view obj args))
       (call-next-method)))
 
+(defun button-wt (&key value name id class disabledp submitp)
+  (with-html-to-string
+    (:input :name name :type "submit" :id id :class (format nil "btn ~A ~A" class (when submitp "btn-primary"))
+     :value value :disabled (when disabledp "disabled")
+     :onclick "disableIrrelevantButtons(this);")))
+
+(deftemplate :button-wt #'button-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
+(defun checkboxes-view-field-wt (&key field-class content field-label show-required-indicator required-indicator-label validation-error)
+  (with-html-to-string
+    (:div :class (format nil "control-group ~A" field-class)
+     (:label :class "control-label"
+      (:span :class "slot-name"
+       (:span :class "extra"
+        (str field-label) ":&nbsp;"
+        (when show-required-indicator
+          (htm (:em :class "required-slot" "(required)&nbsp;"))))))
+     (:div :class (format nil "controls ~A" (when validation-error "warning"))
+      (str content) 
+      (when validation-error
+        (htm (:p :class "validation-error"
+              (:em
+                (:span :class "validation-error-heading" "Error:&nbsp;")
+                (str (format nil "~A" (cdr validation-error)))))))))))
+
+(deftemplate :checkboxes-view-field-wt #'checkboxes-view-field-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
 (in-package :weblocks)
 
 ; +weblocks-normal-theme-compatible
@@ -487,22 +484,6 @@
         (when caption
           (htm (:span :class "caption" (str caption) ":&nbsp;")))
 	(:span :class "message" (str message)))))
-
-(setf (symbol-function 'original-render-button) #'render-button)
-
-; +weblocks-normal-theme-compatible
-(defun render-button (name  &key (value (humanize-name name)) id (class "submit btn"))
-  "Renders a button in a form.
-
-'name' - name of the html control. The name is attributized before
-being rendered.
-'value' - a value on html control. Humanized name is default.
-'id' - id of the html control. Default is nil.
-'class' - a class used for styling. By default, \"submit\"."
-  (with-html
-    (:input :name (attributize-name name) :type "submit" :id id :class class
-	    :value value :onclick "disableIrrelevantButtons(this);")
-    (str "&nbsp;")))
 
 ; +weblocks-normal-theme-compatible +not-tested
 (defmethod render-widget-body :around ((obj pagination) &rest args) 
@@ -592,52 +573,7 @@ being rendered.
 			    messages))))))
       (send-script (ps* `((@ ($ ,(dom-id obj)) show)))))))
 
-(defmethod render-widget-body ((obj gridedit) &rest args)
-  (declare (ignore args))
-
-  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-widget-body)
-
-  (dataedit-update-operations obj)
-  (call-next-method)
-  (when (dataedit-item-widget obj)
-    (with-html 
-      (:div :class "well"
-       (render-widget (dataedit-item-widget obj))))))
-
 (defmethod render-view-field-header-value (value presentation (field table-view-field) (view table-view) widget obj &rest args)
   (declare (ignore args))
   (with-html
     (:span :class "label-bootstrap" (str (view-field-label field)))))
-
-; Copied from weblocks/src/views/types/presentations/checkboxes.lisp 
-(defmethod render-view-field  ((field form-view-field) (view form-view)
-                                                       widget (presentation checkboxes-presentation) value obj
-                                                       &rest args &key validation-errors &allow-other-keys)
-
-  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-view-field)
-
-  (let* ((attribute-slot-name (attributize-name (view-field-slot-name field)))
-         (validation-error (assoc attribute-slot-name validation-errors
-                                  :test #'string-equal
-                                  :key #'view-field-slot-name))
-         (field-class (concatenate 'string attribute-slot-name
-                                   (when validation-error " item-not-validated"))))
-    (with-html
-      (:div :class field-class
-            (:label :class "control-label"
-                    (:span :class "slot-name"
-                           (:span :class "extra"
-                                  (str (view-field-label field)) ":&nbsp;"
-                                  (when (form-view-field-required-p field)
-                                    (htm (:em :class "required-slot" "(required)&nbsp;"))))))
-            (:div :class (format nil "controls ~A" (when validation-error "warning"))
-             (apply #'render-view-field-value
-                    value presentation
-                    field view widget obj
-                    args) 
-             (when validation-error
-               (htm (:p :class "validation-error"
-                     (:em
-                       (:span :class "validation-error-heading" "Error:&nbsp;")
-                       (str (format nil "~A" (cdr validation-error))))))))))))
-
