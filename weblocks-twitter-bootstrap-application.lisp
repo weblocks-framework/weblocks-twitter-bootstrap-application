@@ -219,7 +219,7 @@
         (htm (:p :class "help-inline"
               (str validation-error))))))))
 
-(deftemplate :form-view-field-wt #'form-view-field-wt 
+(deftemplate :form-view-field-wt 'form-view-field-wt 
              :application-class 'twitter-bootstrap-webapp)
 
 ; +weblocks-normal-theme-compatible
@@ -284,7 +284,7 @@
       (when cancel-html 
         (str cancel-html))))))
 
-(deftemplate :form-view-buttons-wt #'form-view-buttons-wt 
+(deftemplate :form-view-buttons-wt 'form-view-buttons-wt 
              :application-class 'twitter-bootstrap-webapp)
 
 
@@ -294,7 +294,7 @@
      (:span (str label)))))
 
 (deftemplate :table-view-field-header-wt 
-             #'table-view-field-header-wt 
+             'table-view-field-header-wt 
              :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/views/formview/formview.lisp
@@ -409,7 +409,7 @@
          (str content))))))
 
 (deftemplate :table-view-header-wt 
-             #'bootstrap-striped-bordered-table-view-header-wt 
+             'bootstrap-striped-bordered-table-view-header-wt 
              :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/widgets/datagrid/drilldown.lisp
@@ -451,7 +451,7 @@
      :value value :disabled (when disabledp "disabled")
      :onclick "disableIrrelevantButtons(this);")))
 
-(deftemplate :button-wt #'button-wt 
+(deftemplate :button-wt 'button-wt 
              :application-class 'twitter-bootstrap-webapp)
 
 (defun checkboxes-view-field-wt (&key field-class content field-label show-required-indicator required-indicator-label validation-error)
@@ -462,16 +462,16 @@
        (:span :class "extra"
         (str field-label) ":&nbsp;"
         (when show-required-indicator
-          (htm (:em :class "required-slot" "(required)&nbsp;"))))))
+          (htm (:em :class "required-slot text-warning" (str required-indicator-label)))))))
      (:div :class (format nil "controls ~A" (when validation-error "warning"))
       (str content) 
       (when validation-error
         (htm (:p :class "validation-error"
               (:em
-                (:span :class "validation-error-heading" "Error:&nbsp;")
-                (str (format nil "~A" (cdr validation-error)))))))))))
+                (:span :class "validation-error-heading")
+                (str validation-error)))))))))
 
-(deftemplate :checkboxes-view-field-wt #'checkboxes-view-field-wt 
+(deftemplate :checkboxes-view-field-wt 'checkboxes-view-field-wt 
              :application-class 'twitter-bootstrap-webapp)
 
 (in-package :weblocks)
