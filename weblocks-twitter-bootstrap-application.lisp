@@ -311,9 +311,7 @@
         (:div :class "text-error"
          (let ((error-count (length errors)))
            (htm 
-             (:h4 (if (eql error-count 1)
-                    (str (format nil "There is 1 validation error:"))
-                    (str (format nil "There are ~S validation errors:" error-count))))))
+             (:h4 (cl-who:fmt (proper-number-form error-count "There is ~S validation error:") error-count))))
          (when non-field-errors
            (htm
              (:ul :class "non-field-validation-errors"
@@ -474,6 +472,17 @@
 (deftemplate :checkboxes-view-field-wt 'checkboxes-view-field-wt 
              :application-class 'twitter-bootstrap-webapp)
 
+(defun modal-wt (&key title content css-class)
+  (with-html-to-string
+    (:div :class "modal-backdrop")
+    (:div :class "modal"
+     (:h1 (:span (str title)))
+     (:div :class css-class
+      (str content)))))
+
+(deftemplate :modal-wt 'modal-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
 (in-package :weblocks)
 
 ; +weblocks-normal-theme-compatible
@@ -508,10 +517,10 @@
 	(str "&nbsp;")))
       ; 'Viewing Page X of Y'
       (:span :class "page-info pull-left"
-	     (:span :class "viewing-label" "Viewing ")
-	     (:span :class "page-label" "Page ")
+	     (:span :class "viewing-label" (str (translate "Viewing ")))
+	     (:span :class "page-label" (str (translate "Page ")))
 	     (:span :class "current-page" (:strong (str (pagination-current-page obj))))
-	     (:span :class "of-label" " of ")
+	     (:span :class "of-label" (str (translate " of ")))
 	     (:span :class "total-pages" (str (pagination-page-count obj))))
       ; 'Next' link
       (:div :class "pull-left"
