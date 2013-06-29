@@ -222,57 +222,35 @@
 (deftemplate :form-view-field-wt 'form-view-field-wt 
              :application-class 'twitter-bootstrap-webapp)
 
-; +weblocks-normal-theme-compatible
-(defmethod render-view-field :around ((field form-view-field)
-                                      (view form-view)
-                                      widget
-                                      (presentation hidden-presentation)
-                                      value obj &rest args)
-  (declare (ignore field view widget presentation value obj args)))
+(defun form-view-field-checkbox-presentation-wt (&key label-class id show-required-indicator required-indicator-label 
+                                show-field-label field-label validation-error content 
+                                field-class)
+  (with-html-to-string
+    (:div :class (format nil "control-group ~A" field-class)
+     (:label :class (format nil "~A-presentation control-label"label-class)
+      :for id
+      (:span :class "slot-name"
+       (:span :class "extra"
+        (when show-field-label
+          (str field-label)
+          (str ":&nbsp;"))
+        (when show-required-indicator
+          (htm (:em :class "required-slot text-warning"
+                (str required-indicator-label)
+                (str "&nbsp;")))))))
+     (:div :class (format nil "controls ~A" (when validation-error "warning"))
+      (str content)
+      (when validation-error
+        (htm (:p :class "help-inline"
+              (str validation-error))))))))
 
-; +weblocks-normal-theme-compatible
-(defmethod render-view-field :around ((field form-view-field) (view form-view)
-                                                              widget (presentation checkbox-presentation) value obj 
-                                                              &rest args &key validation-errors field-info &allow-other-keys)
-  (declare (special *presentation-dom-id*))
+(deftemplate :form-view-field-wt 'form-view-field-checkbox-presentation-wt 
+             :context-matches (lambda (&key presentation &allow-other-keys)
+                                (if (typep presentation 'weblocks:checkbox-presentation)
+                                  10 
+                                  0))
+             :application-class 'twitter-bootstrap-webapp)
 
-  (return-normal-value-when-theme-not-used render-view-field)
-
-  (let* ((attributized-slot-name (if field-info
-                                   (attributize-view-field-name field-info)
-                                   (attributize-name (view-field-slot-name field))))
-         (validation-error (assoc field validation-errors))
-         (field-class (concatenate 'string (arnesi:aif attributized-slot-name attributized-slot-name "")
-                                   (when validation-error " item-not-validated") " control-group"))
-         (*presentation-dom-id* (gen-id)))
-    (with-html
-      (:div :class field-class
-       (:label :class (format nil 
-                              "~A-presentation control-label" (attributize-presentation
-                                                                (view-field-presentation field)))
-        :for *presentation-dom-id*
-        (:span :class "slot-name"
-         (:span :class "extra"
-          (unless (cl-containers:empty-p (view-field-label field))
-            (str (view-field-label field))
-            (str ":&nbsp;"))
-          (let ((required-indicator (weblocks::form-view-field-required-indicator field)))
-            (when (and (form-view-field-required-p field)
-                       required-indicator)
-              (htm (:em :class "required-slot text-warning"
-                    (if (eq t required-indicator)
-                      (str *default-required-indicator*)
-                      (str required-indicator))
-                    (str "&nbsp;"))))))))
-       (:div :class (format nil "controls ~A" (when validation-error "warning"))
-        (apply #'render-view-field-value
-               value presentation
-               field view widget obj
-               :field-info field-info
-               args)
-        (when validation-error
-          (htm (:p :class "help-inline"
-                (str (format nil "~A" (cdr validation-error)))))))))))
 
 (defun form-view-buttons-wt (&key submit-html cancel-html)
   (with-html-to-string
