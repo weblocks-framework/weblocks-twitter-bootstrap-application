@@ -461,16 +461,45 @@
 (deftemplate :modal-wt 'modal-wt 
              :application-class 'twitter-bootstrap-webapp)
 
-(in-package :weblocks)
-
-; +weblocks-normal-theme-compatible
-(defun render-message (message &optional caption)
+(defun render-message-wt (&key message caption)
   "Renders a message to the user with standardized markup."
-  (with-html
+  (with-html-to-string
     (:p :class "user-message well"
-        (when caption
-          (htm (:span :class "caption" (str caption) ":&nbsp;")))
-	(:span :class "message" (str message)))))
+     (when caption
+       (htm (:span :class "caption" (str caption) ":&nbsp;")))
+     (:span :class "message" (str message)))))
+
+(deftemplate :render-message-wt 'render-message-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
+(defun single-flash-message-wt (&key content)
+  (with-html-to-string 
+    (:div :class "alert" 
+     (:button :type "button" :class "close" :data-dismiss "alert" "x")
+     (str content))))
+
+(deftemplate :single-flash-message-wt 'single-flash-message-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
+(defun flash-messages-wt (&key content)
+  (with-html-to-string 
+    (:div :class "view"
+     (with-extra-tags
+       (htm
+         (:div :class "messages clearfix"
+          (str content)))))))
+
+(deftemplate :flash-messages-wt 'flash-messages-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
+(defun table-view-field-header-value-wt (&key content)
+  (with-html-to-string
+    (:span :class "label-bootstrap" (str content))))
+
+(deftemplate :table-view-field-header-value-wt 'table-view-field-header-value-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
+(in-package :weblocks)
 
 ; +weblocks-normal-theme-compatible +not-tested
 (defmethod render-widget-body :around ((obj pagination) &rest args) 
@@ -541,26 +570,3 @@
       ; Total items
       (pagination-render-total-item-count obj)))))
 
-(defmethod render-widget-body ((obj flash) &rest args)
-  (declare (special *on-ajax-complete-scripts* *dirty-widgets*))
-
-  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-widget-body)
-
-  (let ((messages (flash-messages-to-show obj)))
-    (when messages
-      (with-html
-	(:div :class "view"
-	      (with-extra-tags
-		(htm
-		 (:div :class "messages clearfix"
-		      (mapc (lambda (msg)
-                      (htm (:div :class "alert" 
-                            (:button :type "button" :class "close" :data-dismiss "alert" "x")
-                            (apply #'render-widget msg args))))
-			    messages))))))
-      (send-script (ps* `((@ ($ ,(dom-id obj)) show)))))))
-
-(defmethod render-view-field-header-value (value presentation (field table-view-field) (view table-view) widget obj &rest args)
-  (declare (ignore args))
-  (with-html
-    (:span :class "label-bootstrap" (str (view-field-label field)))))
