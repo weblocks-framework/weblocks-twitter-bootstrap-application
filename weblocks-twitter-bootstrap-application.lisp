@@ -155,6 +155,27 @@
   `(unless (in-bootstrap-application-p)
      (return-from ,function (call-next-method))))
 
+(defun form-view-body-wt (&key caption class-name validation-summary fields-prefix fields-suffix form-view-buttons content method action form-id header-class enctype extra-submit-code use-ajax-p)
+  (with-html-to-string
+    (with-html-form (method action
+                            :id form-id
+                            :class (format nil "form-horizontal ~A" header-class)
+                            :enctype enctype
+                            :extra-submit-code extra-submit-code
+                            :use-ajax-p use-ajax-p)
+
+      (when caption
+        (htm (:h1 (fmt caption class-name))
+             (:hr)))
+      (str validation-summary)
+      (str fields-prefix)
+      (str content)
+      (str fields-suffix)
+      (str form-view-buttons))))
+
+(deftemplate :form-view-body-wt 'form-view-body-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
 ; Copied from weblocks/src/views/formview/formview.lisp
 ; +weblocks-normal-theme-compatible
 (defmethod with-view-header :around ((view form-view) obj widget body-fn &rest args &key
@@ -388,38 +409,18 @@
              'bootstrap-striped-bordered-table-view-header-wt 
              :application-class 'twitter-bootstrap-webapp)
 
-; Copied from weblocks/src/widgets/datagrid/drilldown.lisp
-; +weblocks-normal-theme-compatible +not-tested
-(defmethod with-table-view-body-row :around ((view table-view) obj (widget datagrid) &rest args
-				     &key alternp &allow-other-keys)
+(defun datagrid-table-view-body-row-wt (&key row-class prefix suffix row-action session-string content alternp drilled-down-p &allow-other-keys)
+  (with-html-to-string
+    (str prefix)
+    (:tr :class (format nil "~A~A" row-class (if drilled-down-p " info" ""))
+     :onclick (format nil "initiateActionOnEmptySelection(\"~A\", \"~A\");" row-action session-string)
+     :onmouseover "this.style.cursor = \"pointer\";"
+     :style "cursor: expression(\"hand\");"
+     (str content))
+    (str suffix)))
 
-  (return-normal-value-when-theme-not-used with-table-view-body-row)
-
-  (if (and (dataseq-allow-drilldown-p widget)
-	   (dataseq-on-drilldown widget))
-      (let ((row-action (make-action
-			 (lambda (&rest args)
-			   (declare (ignore args))
-			   (when (dataseq-autoset-drilled-down-item-p widget)
-			     (setf (dataseq-drilled-down-item widget) obj))
-			   (funcall (cdr (dataseq-on-drilldown widget)) widget obj))))
-	    (drilled-down-p (and (dataseq-drilled-down-item widget)
-				 (eql (object-id (dataseq-drilled-down-item widget))
-				      (object-id obj)))))
-	(safe-apply (sequence-view-row-prefix-fn view) view obj args)
-	(with-html
-	  (:tr :class (when (or alternp drilled-down-p)
-			(concatenate 'string
-				     (when alternp "altern")
-				     (when (and alternp drilled-down-p) " ")
-				     (when drilled-down-p "drilled-down info")))
-	       :onclick (format nil "initiateActionOnEmptySelection(\"~A\", \"~A\");"
-				row-action (session-name-string-pair))
-	       :onmouseover "this.style.cursor = \"pointer\";"
-	       :style "cursor: expression(\"hand\");"
-	       (apply #'render-table-view-body-row view obj widget :row-action row-action args)))
-	(safe-apply (sequence-view-row-suffix-fn view) view obj args))
-      (call-next-method)))
+(deftemplate :datagrid-table-view-body-row-wt 'datagrid-table-view-body-row-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
 (defun button-wt (&key value name id class disabledp submitp)
   (with-html-to-string
