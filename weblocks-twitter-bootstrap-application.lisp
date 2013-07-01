@@ -176,47 +176,6 @@
 (deftemplate :form-view-body-wt 'form-view-body-wt 
              :application-class 'twitter-bootstrap-webapp)
 
-; Copied from weblocks/src/views/formview/formview.lisp
-; +weblocks-normal-theme-compatible
-(defmethod with-view-header :around ((view form-view) obj widget body-fn &rest args &key
-			     (method (form-view-default-method view))
-			     (action (form-view-default-action view))
-			     (fields-prefix-fn (view-fields-default-prefix-fn view))
-			     (fields-suffix-fn (view-fields-default-suffix-fn view))
-			     validation-errors
-			     &allow-other-keys)
-  (declare (special *on-ajax-complete-scripts* *form-submit-dependencies*))
-
-  (return-normal-value-when-theme-not-used with-view-header)
-
-  (let ((form-id (gen-id))
-	(header-class (format nil "view form form-horizontal ~A"
-			      (attributize-name (object-class-name obj)))))
-    (when (>= (count-view-fields view)
-	      (form-view-error-summary-threshold view))
-      (setf header-class (concatenate 'string header-class " long-form")))
-    (let ((form-body
-	   (let ((*weblocks-output-stream* (make-string-output-stream)))
-	     (with-html
-               (arnesi:awhen (view-caption view)
-                 (cl-who:htm 
-                   (:h1 (cl-who:fmt (view-caption view) (humanize-name (object-class-name obj))))
-                   (:hr)))
-	       (render-validation-summary view obj widget validation-errors)
-	       (safe-apply fields-prefix-fn view obj args)
-	       (apply body-fn view obj args)
-	       (safe-apply fields-suffix-fn view obj args)
-	       (apply #'render-form-view-buttons view obj widget args)
-	       (get-output-stream-string *weblocks-output-stream*)))))
-      (with-html-form (method action
-			      :id (when (form-view-focus-p view) form-id)
-			      :class header-class
-			      :enctype (form-view-default-enctype view)
-			      :extra-submit-code (render-form-submit-dependencies *form-submit-dependencies*)
-			      :use-ajax-p (form-view-use-ajax-p view))
-	(write-string form-body *weblocks-output-stream*)))
-    (when (form-view-focus-p view)
-        (send-script (ps* `((@ ($ ,form-id) focus-first-element)))))))
 
 (defun form-view-field-wt (&key label-class id show-required-indicator required-indicator-label 
                                 show-field-label field-label validation-error content 
@@ -285,7 +244,6 @@
 
 (deftemplate :form-view-buttons-wt 'form-view-buttons-wt 
              :application-class 'twitter-bootstrap-webapp)
-
 
 (defun table-view-field-header-wt (&key row-class label)
   (with-html-to-string
