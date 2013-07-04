@@ -458,6 +458,25 @@
 (deftemplate :table-view-field-header-value-wt 'table-view-field-header-value-wt 
              :application-class 'twitter-bootstrap-webapp)
 
+(defun template-form-view-body-wt (&rest args &key caption class-name validation-summary form-view-buttons content method action form-id header-class enctype extra-submit-code use-ajax-p fields-data &allow-other-keys)
+  (with-html-to-string
+    (with-html-form (method action
+                            :id form-id
+                            :class (format nil "~A form-horizontal" header-class)
+                            :enctype enctype
+                            :extra-submit-code extra-submit-code
+                            :use-ajax-p use-ajax-p)
+      (when caption
+        (htm (:h1 (cl-who:fmt caption class-name))))
+      (str validation-summary)
+      (loop for (key value) on fields-data  :by #'cddr
+            do 
+            (cl-who:htm (str value)))
+      (str form-view-buttons))))
+
+(deftemplate :template-form-view-body-wt 'template-form-view-body-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
 (in-package :weblocks)
 
 ; +weblocks-normal-theme-compatible +not-tested
