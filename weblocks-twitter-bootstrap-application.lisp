@@ -497,7 +497,7 @@
 		       (when (> (pagination-current-page obj) 1)
 			 (decf (pagination-current-page obj))
 			 (pagination-call-on-change obj)))
-		     (humanize-name "< Previous")
+		     (translate (humanize-name "< Previous"))
 		     :class "previous-page btn")
 	(str "&nbsp;")))
       ; 'Viewing Page X of Y'
@@ -518,7 +518,7 @@
 				(pagination-page-count obj))
 			 (incf (pagination-current-page obj))
 			 (pagination-call-on-change obj)))
-		     (humanize-name "Next >")
+		     (translate (humanize-name "Next >"))
 		     :class "next-page btn")))
       ; Go to page
       (when (> (pagination-page-count obj) 1)
