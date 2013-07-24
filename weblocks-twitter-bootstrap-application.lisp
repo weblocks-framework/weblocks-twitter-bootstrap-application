@@ -52,12 +52,9 @@
       (add-empty-css-action "/pub/stylesheets/datagrid.css")
       (add-empty-css-action "/pub/stylesheets/table.css"))))
 
-; +weblocks-normal-theme-compatible +not-tested
-(defmethod initialize-instance :after ((self twitter-bootstrap-webapp) &key ignore-default-dependencies &allow-other-keys)
-  (unless ignore-default-dependencies
-    (setf (weblocks::weblocks-webapp-application-dependencies self)
-          '((:script "jquery-seq" :default t)
-            (:script "weblocks-jquery" :default t)))))
+(defmethod weblocks:weblocks-webapp-default-dependencies ((self twitter-bootstrap-webapp))
+  '((:script "jquery-seq" :default t)
+    (:script "weblocks-jquery" :default t)))
 
 (defmacro capture-weblocks-output (&body body)
   `(let ((*weblocks-output-stream* (make-string-output-stream)))
