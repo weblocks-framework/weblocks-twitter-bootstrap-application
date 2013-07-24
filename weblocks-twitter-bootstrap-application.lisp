@@ -525,7 +525,7 @@
           (:div :class "pull-left form-inline"
            (with-html-form (:get (curry #'pagination-on-go-to-page obj))
              (:div :class "pull-left"
-              (:label (:span "Go to page:&nbsp;")
+              (:label (:span (str (translate "Go to page:&nbsp;")))
                (:input :name "page-number"
                 :type "text"
                 :class (concatenate 'string
@@ -541,7 +541,7 @@
                 :value (when (/= (pagination-current-page obj) 1)
                          "1"))))
              (:div :class "pull-left"
-               (render-button "go-to-page" :value "Go"))))))
+               (render-button "go-to-page" :value (translate "Go")))))))
       ; Total items
       (pagination-render-total-item-count obj)))))
 
