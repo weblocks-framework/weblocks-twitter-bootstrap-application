@@ -474,6 +474,27 @@
 (deftemplate :template-form-view-body-wt 'template-form-view-body-wt 
              :application-class 'twitter-bootstrap-webapp)
 
+(defun radio-view-field-wt (&key field-class content field-label show-required-indicator required-indicator-label validation-error)
+  (with-html-to-string
+    (:div :class (format nil "control-group ~A" field-class)
+     (:label :class "control-label"
+      (:span :class "slot-name"
+       (:span :class "extra"
+        (str field-label) ":&nbsp;"
+        (when show-required-indicator
+          (htm (:em :class "required-slot text-warning" (str required-indicator-label))
+               (str "&nbsp;"))))))
+     (:div :class (format nil "controls ~A" (when validation-error "warning"))
+      (str content) 
+      (when validation-error
+        (htm (:p :class "validation-error"
+              (:em
+                (:span :class "validation-error-heading")
+                (str validation-error)))))))))
+
+(deftemplate :radio-view-field-wt 'radio-view-field-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
 (in-package :weblocks)
 
 ; +weblocks-normal-theme-compatible +not-tested
