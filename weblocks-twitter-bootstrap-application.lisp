@@ -15,7 +15,7 @@
     "https://raw.github.com/html/weblocks-assets/master/jquery/1.8.2/"
     :webapp app)
   (weblocks-utils:require-assets 
-    "https://raw.github.com/html/weblocks-assets/master/jquery-seq/0.0.1/"
+    "https://raw.github.com/html/weblocks-assets/master/jquery-seq/0.0.2/"
     :webapp app)
   (weblocks-utils:require-assets 
     "https://raw.github.com/html/weblocks-assets/master/weblocks-jquery/0.1.4/"
