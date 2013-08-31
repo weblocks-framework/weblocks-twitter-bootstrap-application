@@ -252,101 +252,95 @@
              'table-view-field-header-wt 
              :application-class 'twitter-bootstrap-webapp)
 
-; Copied from weblocks/src/views/formview/formview.lisp
-; +weblocks-normal-theme-compatible +not-tested
-(defmethod render-validation-summary :around ((view form-view) obj widget errors)
-  (declare (ignore view obj))
+(defun validation-summary-wt (&key non-field-errors field-errors errors-count-label)
+  (with-html-to-string
+    (:div :class "text-error"
+     (str errors-count-label)
+     (when non-field-errors
+       (htm
+         (:ul :class "non-field-validation-errors"
+          (loop for err in non-field-errors do 
+                (htm 
+                  (:li
+                    (str err)))))))
+     (when field-errors
+       (htm
+         (:ul :class "field-validation-errors"
+          (loop for err in field-errors do
+                (htm 
+                  (:li
+                    (str err))))))))))
 
-  (return-normal-value-when-theme-not-used render-validation-summary)
+(deftemplate :validation-summary-wt 'validation-summary-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
-  (when errors
-    (let ((non-field-errors (weblocks::find-all errors #'null :key #'car))
-          (field-errors (weblocks::find-all errors (arnesi:compose #'not #'null) :key #'car)))
-      (with-html
-        (:div :class "text-error"
-         (let ((error-count (length errors)))
-           (htm 
-             (:h4 (cl-who:fmt (proper-number-form error-count "There is ~S validation error:") error-count))))
-         (when non-field-errors
-           (htm
-             (:ul :class "non-field-validation-errors"
-              (mapc (lambda (err)
-                      (with-html
-                        (:li
-                          (str (format nil "~A" (cdr err))))))
-                    non-field-errors))))
-         (when field-errors
-           (htm
-             (:ul :class "field-validation-errors"
-              (mapc (lambda (err)
-                      (with-html
-                        (:li
-                          (str (format nil "~A" (cdr err))))))
-                    field-errors)))))))))
+(defun table-view-field-header-sorting-wt (&key label sort-asc-p sortingp &allow-other-keys)
+  (weblocks:with-html-to-string
+    (:span 
+      (str label)
+      (str "&nbsp;"))
+    (if sortingp
+      (htm (:i :class (if sort-asc-p "icon-chevron-up" "icon-chevron-down")))
+      (htm (:i :class "icon-white")))))
+
+(deftemplate :table-view-field-header-sorting-wt 'table-view-field-header-sorting-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/widgets/datagrid/sort.lisp
 ; +weblocks-normal-theme-compatible +not-tested
-(defmethod render-view-field-header :around ((field table-view-field) (view table-view)
-				     (widget datagrid) presentation value obj 
-				     &rest args &key field-info
-				     &allow-other-keys)
+(defmethod render-view-field-header :around ((field table-view-field) 
+                                             (view table-view)
+                                             (widget datagrid) presentation value obj 
+                                             &rest args &key field-info
+                                             &allow-other-keys)
   (declare (ignore args))
 
   (return-normal-value-when-theme-not-used render-view-field-header)
 
   (if (dataseq-field-sortable-p widget field)
-    (let* ((slot-path (get-field-info-sort-path field-info))
+    (let* ((context (list :view view :field field :widget widget :presentation presentation :object obj))
+           (slot-path (get-field-info-sort-path field-info))
            (th-class (when (equalp slot-path (dataseq-sort-path widget))
                        (concatenate 'string " sort-"
                                     (attributize-name (string (dataseq-sort-direction widget))))))
            (sort-dir (dataseq-sort-direction widget)))
-      (with-html
-        (:th :class (concatenate 'string
-                                 (if field-info
-                                   (attributize-view-field-name field-info)
-                                   (attributize-name (view-field-slot-name field)))
-                                 th-class)
-             (render-link
-               (make-action
-                 (lambda (&rest args)
-                   (declare (ignore args))
-                   (let ((new-dir :asc))
-                     (when (equalp (dataseq-sort-path widget) slot-path)
-                       (setf new-dir (negate-sort-direction sort-dir)))
-                     (setf (dataseq-sort widget) (cons slot-path new-dir)))
-                   ;; we also need to clear the selection
-                   (dataseq-clear-selection widget)))
-               
-               (weblocks:with-html-to-string
-                 (:span (str (weblocks-util:translate (view-field-label field)))
-                  (str "&nbsp;"))
-                 (if (equalp slot-path (dataseq-sort-path widget))
-                   (htm (:i :class (if (equal (dataseq-sort-direction widget) :asc) "icon-chevron-up" "icon-chevron-down")))
-                   (htm (:i :class "icon-white"))))
-               :class "nowrap"))))
-      (call-next-method)))
+      (render-wt 
+        :table-view-field-header-wt 
+        context
+        :row-class (concatenate 'string
+                                (if field-info
+                                  (attributize-view-field-name field-info)
+                                  (attributize-name (view-field-slot-name field)))
+                                th-class)
+        :label (capture-weblocks-output 
+                 (render-link
+                   (make-action
+                     (lambda (&rest args)
+                       (declare (ignore args))
+                       (let ((new-dir :asc))
+                         (when (equalp (dataseq-sort-path widget) slot-path)
+                           (setf new-dir (negate-sort-direction sort-dir)))
+                         (setf (dataseq-sort widget) (cons slot-path new-dir)))
+                       ;; we also need to clear the selection
+                       (dataseq-clear-selection widget)))
 
-; Copied from weblocks/src/widgets/dataseq/dataseq.lisp
-; +weblocks-normal-theme-compatible +not-tested
-(defmethod dataseq-render-operations-default :around ((obj dataseq) &rest args)
-  (declare (ignore args))
+                   (render-wt-to-string :table-view-field-header-sorting-wt 
+                                        context
+                                        :label (weblocks-util:translate (view-field-label field))
+                                        :sortingp (equalp slot-path (dataseq-sort-path widget))
+                                        :sort-asc-p (if (equalp slot-path (dataseq-sort-path widget))
+                                                      (equal (dataseq-sort-direction widget) :asc)))
+                   :class "nowrap"))))
+    (call-next-method)))
 
-  (return-normal-value-when-theme-not-used dataseq-render-operations-default)
+(defun dataseq-operations-wt (&key content &allow-other-keys)
+  (with-html-to-string
+    (:div :class "operations pull-right btn-group"
+     (str content))))
 
-  (flet ((render-operations ()
-           (with-html
-             (:div :class "operations pull-right btn-group"
-              (mapc (lambda (op)
-                      (render-button (car op) :class "submit btn"))
-                    (append
-                      (dataseq-common-ops obj)
-                      (when (dataseq-allow-select-p obj)
-                        (dataseq-item-ops obj))))))))
-    (if (dataseq-wrap-body-in-form-p obj)
-      (render-operations)
-      (with-html-form (:get (make-action (curry #'dataseq-operations-action obj))
-                       :class "operations-form")
-                      (render-operations)))))
+(deftemplate :dataseq-operations-wt 
+             'dataseq-operations-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/views/tableview.lisp
 ; +weblocks-normal-theme-compatible +not-tested
