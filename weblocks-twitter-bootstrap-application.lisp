@@ -504,7 +504,7 @@
          (:div :class "pull-left"
           (str previous-link))
          ; 'Viewing Page X of Y'
-         (:span :class "page-info"
+         (:span :class "page-info pull-left"
           (:span :class "viewing-label" (str (translate "Viewing ")))
           (:span :class "page-label" (str (translate "Page ")))
           (:span :class "current-page" (:strong (str current-page)))

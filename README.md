@@ -8,7 +8,8 @@ Supports forms (most of field types), gridedit (with pagination), navigation.
 ## Usage 
 
 Inherit your application from `'twitter-bootstrap-webapp` to make skin work.
-To use this theme load this package and use following snippet when defining application.
+
+Use following snippet when defining application for this.
 
 ```lisp
 ; Example of defwebapp
