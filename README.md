@@ -1,11 +1,13 @@
-# Weblocks Twitter Bootstrap Application Package
+# Weblocks Twitter Bootstrap Application
 
 ## About
 
-An attempt to use Twitter Bootstrap as html base for Weblocks applications.
+Twitter Bootstrap skin for Weblocks. 
+Supports forms (most of field types), gridedit (with pagination), navigation.
 
 ## Usage 
 
+Inherit your application from `'twitter-bootstrap-webapp` to make skin work.
 To use this theme load this package and use following snippet when defining application.
 
 ```lisp
@@ -32,6 +34,7 @@ Also you can use following snippet in your initial app for testing, it should be
 
 ## Additional Navigation Template
 
+There is an additional navigation template in theme package.
 Here is snippet for making your navigation look like this http://getbootstrap.com/2.3.2/components.html#navbar
 
 ```lisp

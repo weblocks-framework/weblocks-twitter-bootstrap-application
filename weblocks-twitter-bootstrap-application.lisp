@@ -6,7 +6,6 @@
   ((responsiveness-enabled-p :initform t :initarg :responsiveness-enabled-p))
   (:metaclass weblocks:webapp-class))
 
-; +weblocks-normal-theme-compatible
 (defmethod initialize-webapp :before ((app twitter-bootstrap-webapp))
   (weblocks-utils:require-assets 
     "https://raw.github.com/html/weblocks-assets/master/twitter-bootstrap/2.2.1/"
@@ -65,7 +64,15 @@
      ,@body 
      (get-output-stream-string *weblocks-output-stream*)))
 
-(mustache:defmustache twitter-bootstrap-template 
+(defmacro def-mustache-wt (name template)
+  "Define weblocks template, similar to mustache:defmustache but transforms defined function into weblocks template format"
+  (let ((obj (gensym)))
+    `(let ((,obj (mustache::parse ,template)))
+       (defun ,name (&rest args)
+         (with-output-to-string (mustache:*mustache-output*)
+           (mustache::render-body ,obj (alexandria:plist-alist args) ,template))))))
+
+(def-mustache-wt page-wt
 "<!DOCTYPE html>
 <html>
   <head>
@@ -103,6 +110,9 @@
   </body>
 </html>")
 
+(deftemplate :page-wt 'page-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
 ; Copied from weblocks/src/page-template.lisp
 ; +weblocks-normal-theme-compatible +not-tested
 (defmethod render-page ((app twitter-bootstrap-webapp))
@@ -128,22 +138,21 @@
                            (with-javascript "updateWidgetStateFromHash();"))))
          (webapp-files-prefix (string-right-trim "/" (weblocks::weblocks-webapp-prefix app))))
 
-    (let ((mustache:*mustache-output* weblocks:*weblocks-output-stream*))
-      (twitter-bootstrap-template 
-        `((:title . ,(application-page-title app))
-          (:header-content . ,header-content)
-          (:body-content . ,body-content)
-          (:webapp-files-prefix . ,webapp-files-prefix)
-          (:responsiveness-enabled-p . ,(slot-value app 'responsiveness-enabled-p)))))))
+    (render-wt :page-wt (list :app app) 
+               :title (application-page-title app)
+               :header-content header-content
+               :body-content body-content 
+               :responsiveness-enabled-p (slot-value app 'responsiveness-enabled-p))))
 
-; Copied from weblocks/src/page-template.lisp
-; +weblocks-normal-theme-compatible +not-tested
-(defmethod render-page-body ((app twitter-bootstrap-webapp) body-string)
-  (with-html
+(defun page-body-wt (&key body-string &allow-other-keys)
+  (with-html-to-string
     (:div :class "page-wrapper container"
-	  (render-extra-tags "page-extra-top-" 3)
-	  (cl-who:htm (str body-string))
-	  (render-extra-tags "page-extra-bottom-" 3))))
+     (render-extra-tags "page-extra-top-" 3)
+     (htm (str body-string))
+     (render-extra-tags "page-extra-bottom-" 3))))
+
+(deftemplate :page-body-wt 'page-body-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
 (defun in-bootstrap-application-p ()
   (subtypep (class-of (current-webapp)) 'twitter-bootstrap-webapp))
@@ -173,7 +182,6 @@
 
 (deftemplate :form-view-body-wt 'form-view-body-wt 
              :application-class 'twitter-bootstrap-webapp)
-
 
 (defun form-view-field-wt (&key label-class id show-required-indicator required-indicator-label 
                                 show-field-label field-label validation-error content 
@@ -228,7 +236,6 @@
                                   10 
                                   0))
              :application-class 'twitter-bootstrap-webapp)
-
 
 (defun form-view-buttons-wt (&key submit-html cancel-html)
   (with-html-to-string
@@ -287,7 +294,6 @@
              :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/widgets/datagrid/sort.lisp
-; +weblocks-normal-theme-compatible +not-tested
 (defmethod render-view-field-header :around ((field table-view-field) 
                                              (view table-view)
                                              (widget datagrid) presentation value obj 
@@ -343,7 +349,6 @@
              :application-class 'twitter-bootstrap-webapp)
 
 ; Copied from weblocks/src/views/tableview.lisp
-; +weblocks-normal-theme-compatible +not-tested
 (defun bootstrap-striped-bordered-table-view-header-wt (&key caption summary header-content content)
   (with-html-to-string
     (:table :class "table-striped table-bordered" :summary summary 
@@ -490,74 +495,78 @@
 (deftemplate :radio-view-field-wt 'radio-view-field-wt 
              :application-class 'twitter-bootstrap-webapp)
 
-(in-package :weblocks)
+(defun pagination-body-wt (&key pages-count-zerop previous-link next-link total-items-info current-page pages-count go-to-page-form &allow-other-keys)
+  (with-html-to-string 
+    (unless pages-count-zerop
+      (htm 
+        (:div :class "pagination-inner"
+         ; 'Previous' link
+         (:div :class "pull-left"
+          (str previous-link))
+         ; 'Viewing Page X of Y'
+         (:span :class "page-info"
+          (:span :class "viewing-label" (str (translate "Viewing ")))
+          (:span :class "page-label" (str (translate "Page ")))
+          (:span :class "current-page" (:strong (str current-page)))
+          (:span :class "of-label" (str (translate " of ")))
+          (:span :class "total-pages" (str pages-count)))
+         ; 'Next' link
+         (:div :class "pull-left"
+          (str next-link))
+         ; Go to page
+         (str go-to-page-form)
+         ; Total items
+         (str total-items-info))))))
 
-; +weblocks-normal-theme-compatible +not-tested
-(defmethod render-widget-body :around ((obj pagination) &rest args) 
-  (declare (ignore args)
-           (special *request-hook*))
+(deftemplate :pagination-body-wt 'pagination-body-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
-  (weblocks-twitter-bootstrap-application::return-normal-value-when-theme-not-used render-widget-body)
+(defun pagination-next-link-wt (&key action last-page-p &allow-other-keys)
+  (with-html-to-string 
+    (unless last-page-p
+      (htm 
+        (str "&nbsp;")
+        (render-link action (translate (humanize-name "Next >")) :class "next-page btn")))))
 
-  (when (> (pagination-page-count obj) 0)
-    (with-html 
-      (:div :class "pagination-inner"
-      ; 'Previous' link
-      (:div :class "pull-left"
-       (when (> (pagination-current-page obj) 1)
-	(render-link (lambda (&rest args)
-                       (declare (ignore args))
-		       (when (> (pagination-current-page obj) 1)
-			 (decf (pagination-current-page obj))
-			 (pagination-call-on-change obj)))
-		     (translate (humanize-name "< Previous"))
-		     :class "previous-page btn")
-	(str "&nbsp;")))
-      ; 'Viewing Page X of Y'
-      (:span :class "page-info pull-left"
-	     (:span :class "viewing-label" (str (translate "Viewing ")))
-	     (:span :class "page-label" (str (translate "Page ")))
-	     (:span :class "current-page" (:strong (str (pagination-current-page obj))))
-	     (:span :class "of-label" (str (translate " of ")))
-	     (:span :class "total-pages" (str (pagination-page-count obj))))
-      ; 'Next' link
-      (:div :class "pull-left"
-       (when (< (pagination-current-page obj)
-	       (pagination-page-count obj))
-	(str "&nbsp;")
-	(render-link (lambda (&rest args)
-                       (declare (ignore args))
-		       (when (< (pagination-current-page obj)
-				(pagination-page-count obj))
-			 (incf (pagination-current-page obj))
-			 (pagination-call-on-change obj)))
-		     (translate (humanize-name "Next >"))
-		     :class "next-page btn")))
-      ; Go to page
-      (when (> (pagination-page-count obj) 1)
-        (htm 
-          (:div :class "pull-left"
-           "&nbsp;")
-          (:div :class "pull-left form-inline"
-           (with-html-form (:get (curry #'pagination-on-go-to-page obj))
-             (:div :class "pull-left"
-              (:label (:span (str (translate "Go to page:&nbsp;")))
-               (:input :name "page-number"
-                :type "text"
-                :class (concatenate 'string
-                                    "page-number input-small"
-                                    (when (slot-value obj 'last-request-error-p)
-                                      " item-not-validated"))
-                :onfocus (concatenate 'string
-                                      "$(this).removeClassName(\"item-not-validated\");"
-                                      (when (/= (pagination-current-page obj) 1)
-                                        "if(this.value == \"1\") { this.value = \"\"; }"))
-                :onblur (when (/= (pagination-current-page obj) 1)
-                          "if(this.value == \"\") { this.value = \"1\"; }")
-                :value (when (/= (pagination-current-page obj) 1)
-                         "1"))))
-             (:div :class "pull-left"
-               (render-button "go-to-page" :value (translate "Go")))))))
-      ; Total items
-      (pagination-render-total-item-count obj)))))
+(deftemplate :pagination-next-link-wt 'pagination-next-link-wt 
+             :application-class 'twitter-bootstrap-webapp)
 
+(defun pagination-prev-link-wt (&key action first-page-p &allow-other-keys) 
+  (with-html-to-string 
+    (unless first-page-p
+      (htm 
+        (render-link action (translate (humanize-name "< Previous")) :class "previous-page btn")
+        (str "&nbsp;")))))
+
+(deftemplate :pagination-prev-link-wt 'pagination-prev-link-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
+(defun pagination-go-to-page-wt (&key first-page-p form-action last-request-error-p pages-count-more-than-one-p &allow-other-keys)
+  (capture-weblocks-output 
+    (when pages-count-more-than-one-p
+      (with-html 
+        (:div :class "pull-left"
+         "&nbsp;")
+        (:div :class "pull-left form-inline"
+         (with-html-form (:get form-action)
+                         (:div :class "pull-left"
+                          (:label (:span (str (translate "Go to page:&nbsp;")))
+                           (:input :name "page-number"
+                            :type "text"
+                            :class (concatenate 'string
+                                                "page-number input-small"
+                                                (when  last-request-error-p
+                                                  " item-not-validated"))
+                            :onfocus (concatenate 'string
+                                                  "$(this).removeClassName(\"item-not-validated\");"
+                                                  (unless first-page-p
+                                                    "if(this.value == \"1\") { this.value = \"\"; }"))
+                            :onblur (unless first-page-p
+                                      "if(this.value == \"\") { this.value = \"1\"; }")
+                            :value (unless first-page-p
+                                     "1"))))
+                         (:div :class "pull-left"
+                          (render-button "go-to-page" :value (translate "Go")))))))))
+
+(deftemplate :pagination-go-to-page-wt 'pagination-go-to-page-wt 
+             :application-class 'twitter-bootstrap-webapp)
