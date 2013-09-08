@@ -142,6 +142,7 @@
                :title (application-page-title app)
                :header-content header-content
                :body-content body-content 
+               :webapp-files-prefix webapp-files-prefix
                :responsiveness-enabled-p (slot-value app 'responsiveness-enabled-p))))
 
 (defun page-body-wt (&key body-string &allow-other-keys)
