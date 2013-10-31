@@ -340,6 +340,10 @@
                    :class "nowrap"))))
     (call-next-method)))
 
+(defmethod dependencies :around ((obj form-view))
+  (unless (in-bootstrap-application-p)
+    (call-next-method)))
+
 (defun dataseq-operations-wt (&key content &allow-other-keys)
   (with-html-to-string
     (:div :class "operations pull-right btn-group"
