@@ -60,9 +60,11 @@
                     :url (make-instance 'puri:uri :path (weblocks-utils:prepend-webapp-path "/bootstrap/js/bootstrap.js" self)))))
 
 (defmacro capture-weblocks-output (&body body)
-  `(let ((*weblocks-output-stream* (make-string-output-stream)))
-     ,@body 
-     (get-output-stream-string *weblocks-output-stream*)))
+  `(weblocks-util::nested-html-part 
+     (list :type :capture-weblocks-output :bootstrap-application t)
+     (let ((*weblocks-output-stream* (make-string-output-stream)))
+       ,@body 
+       (get-output-stream-string *weblocks-output-stream*))))
 
 (defmacro def-mustache-wt (name template)
   "Define weblocks template, similar to mustache:defmustache but transforms defined function into weblocks template format"
