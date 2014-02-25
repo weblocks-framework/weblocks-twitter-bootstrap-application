@@ -17,7 +17,7 @@
     "https://raw.github.com/html/weblocks-assets/master/jquery-seq/0.0.3/"
     :webapp app)
   (weblocks-utils:require-assets 
-    "https://raw.github.com/html/weblocks-assets/master/weblocks-jquery/0.1.4/"
+    "https://raw.github.com/html/weblocks-assets/master/weblocks-jquery/0.1.5/"
     :webapp app)
   (push (weblocks:create-static-file-dispatcher-and-handler 
           (weblocks-utils:prepend-webapp-path "/pub/scripts/twitter-bootstrap-dialog.js" app)
