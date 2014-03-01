@@ -47,7 +47,7 @@ Here is snippet for making your navigation look like this http://getbootstrap.co
 
 ## Using flashes
 
-It is better to use 'weblocks-twitter-bootstrap-application:bootstrap-flash instead of 'weblocks:flash 
+It is better to use ```'weblocks-twitter-bootstrap-application:bootstrap-flash``` instead of ```'weblocks:flash```
 It has working close button.
 
 ## Assets dependencies
