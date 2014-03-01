@@ -45,4 +45,3 @@
 
 (deftemplate :single-bootstrap-flash-message-wt 'single-bootstrap-flash-message-wt 
              :application-class 'twitter-bootstrap-webapp)
-(<:button :type "button" :class "close" :data-dismiss "alert" "x" :onclick "Test")
