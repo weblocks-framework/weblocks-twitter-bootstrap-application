@@ -36,3 +36,7 @@
 .gridedit .operations {
   height: 0;
 }
+
+.alert .widget p {
+  margin-bottom: 0;
+}
