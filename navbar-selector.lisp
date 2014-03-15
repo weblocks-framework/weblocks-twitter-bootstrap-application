@@ -1,7 +1,7 @@
 (in-package :weblocks-twitter-bootstrap-application)
 
 (defwidget bootstrap-navbar-selector (simple-selector)
-  ((selected :accessor navbar-selector-selected)
+  ((selected :accessor bootstrap-navbar-selector-selected)
    (titles :initarg :titles)))
 
 (defun get-selector-link (widget selected)
