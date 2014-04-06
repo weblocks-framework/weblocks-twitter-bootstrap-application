@@ -45,6 +45,20 @@ Here is snippet for making your navigation look like this http://getbootstrap.co
    :navigation-class 'bootstrap-navbar-navigation)
 ```
 
+## Additional Navigation Widget
+
+Package contains replacement for standard Weblocks navigation widget. It uses bootstrap navbar look - http://getbootstrap.com/2.3.2/components.html#navbar
+It does not work with urls properly beacause of different routing system not yet included into Weblocks. But it may be used as tab widget.
+Replace `make-navigation` with `weblocks-twitter-bootstrap-application:make-navbar-selector` and remove any keyword parameters from call to use it.
+
+```lisp
+(make-navigation 
+   "navigation-name"
+   (list "Nav item 1" "Widget 1 itself" nil)
+   (list "Nav item 2" "Widget 2 itself" "some-url-for-future")
+   ; ... some other navigation items
+   )
+
 ## Using flashes
 
 It is better to use ```'weblocks-twitter-bootstrap-application:bootstrap-flash``` instead of ```'weblocks:flash```
