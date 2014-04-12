@@ -36,7 +36,8 @@
       (cdr child-to-render))))
 
 (defmethod render-widget-children ((widget simple-selector) &rest args)
-  (render-widget (get-selected-widget widget)))
+  (when (get-selected-widget widget)
+    (render-widget (get-selected-widget widget))))
 
 (defmethod widget-children ((obj simple-selector) &optional type)
   (list (get-selected-widget obj)))

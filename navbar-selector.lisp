@@ -33,7 +33,8 @@
 
 (defun make-navbar-selector (name &rest args)
   (let ((names  (mapcar #'third args)))
-    (setf (car names) "")
+    (when names
+      (setf (car names) ""))
     (make-instance 'bootstrap-navbar-selector 
                    :names names
                    :titles (mapcar #'first args)
