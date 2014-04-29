@@ -4,7 +4,7 @@
   ((selected :accessor bootstrap-navbar-selector-selected)
    (titles :initarg :titles)))
 
-(defun get-selector-link (widget selected)
+(defmethod get-selector-link (widget selected)
   ; (url-for :navbar.selected j)
   (make-action-url 
     (function-or-action->action 
