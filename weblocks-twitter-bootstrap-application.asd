@@ -6,7 +6,7 @@
   :author "Olexiy Zamkoviy <olexiy.z@gmail.com>"
   :license "LLGPL"
   :version (:read-from-file "version.lisp-expr")
-  :depends-on (:cl-mustache :weblocks :yaclml :cl-fad :weblocks-utils)
+  :depends-on (:cl-mustache :weblocks :yaclml :cl-fad :weblocks-utils :weblocks-jquery-js)
   :components ((:file "package")
                (:file "weblocks-twitter-bootstrap-application")
                (:file "make-new-bootstrap-app" :depends-on ("package"))

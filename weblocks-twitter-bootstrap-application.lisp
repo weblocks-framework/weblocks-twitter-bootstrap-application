@@ -10,15 +10,6 @@
   (weblocks-utils:require-assets 
     "https://raw.github.com/html/weblocks-assets/master/twitter-bootstrap/2.2.1/"
     :webapp app)
-  (weblocks-utils:require-assets 
-    "https://raw.github.com/html/weblocks-assets/master/jquery/1.8.2/"
-    :webapp app)
-  (weblocks-utils:require-assets 
-    "https://raw.github.com/html/weblocks-assets/master/jquery-seq/0.0.3/"
-    :webapp app)
-  (weblocks-utils:require-assets 
-    "https://raw.github.com/html/weblocks-assets/master/weblocks-jquery/0.2.0/"
-    :webapp app)
   (push (weblocks:create-static-file-dispatcher-and-handler 
           (weblocks-utils:prepend-webapp-path "/pub/scripts/twitter-bootstrap-dialog.js" app)
           (merge-pathnames 
@@ -33,7 +24,7 @@
           (weblocks-utils:prepend-webapp-path "/pub/scripts/datagrid.js" app)
           (merge-pathnames 
             "datagrid.js"
-            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*) 
+            (asdf-system-directory :weblocks-twitter-bootstrap-application))) weblocks::*dispatch-table*)
 
   (let ((empty-css-action 
           (lambda (&rest args)
@@ -52,10 +43,7 @@
       (add-empty-css-action "/pub/stylesheets/table.css"))))
 
 (defmethod weblocks:weblocks-webapp-default-dependencies ((self twitter-bootstrap-webapp))
-  `((:script "jquery-1.8.2" :default t)
-    (:script "jquery-seq" :default t)
-    (:script "weblocks-jquery" :default t)
-    (:script "twitter-bootstrap-dialog" :default t)
+  `((:script "twitter-bootstrap-dialog" :default t)
     ,(make-instance 'script-dependency 
                     :url (make-instance 'puri:uri :path (weblocks-utils:prepend-webapp-path "/bootstrap/js/bootstrap.js" self)))))
 
