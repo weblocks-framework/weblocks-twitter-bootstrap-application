@@ -43,9 +43,11 @@
       (add-empty-css-action "/pub/stylesheets/table.css"))))
 
 (defmethod weblocks:weblocks-webapp-default-dependencies ((self twitter-bootstrap-webapp))
-  `((:script "twitter-bootstrap-dialog" :default t)
-    ,(make-instance 'script-dependency 
-                    :url (make-instance 'puri:uri :path (weblocks-utils:prepend-webapp-path "/bootstrap/js/bootstrap.js" self)))))
+  (append 
+    (call-next-method)
+    `((:script "twitter-bootstrap-dialog" :default t)
+      ,(make-instance 'script-dependency 
+                      :url (make-instance 'puri:uri :path (weblocks-utils:prepend-webapp-path "/bootstrap/js/bootstrap.js" self))))))
 
 (defmacro capture-weblocks-output (&body body)
   `(weblocks-util::nested-html-part 
