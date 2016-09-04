@@ -403,6 +403,18 @@
 (deftemplate :checkboxes-view-field-wt 'checkboxes-view-field-wt 
              :application-class 'twitter-bootstrap-webapp)
 
+(defun render-checkbox-wt (&key name id class checked-p value content disabled-p)
+  (with-html-to-string
+    (:label 
+      (:input :name name :type "checkbox" :id id :class class
+       :checked checked-p :disabled (if disabled-p "disabled")
+       :value value)
+      (str "&nbsp;")
+      (str content))))
+
+(deftemplate :checkbox-view-field-value-wt 'render-checkbox-wt 
+             :application-class 'twitter-bootstrap-webapp)
+
 (defun modal-wt (&key title content css-class)
   (with-html-to-string
     (:div :class "modal-backdrop")
