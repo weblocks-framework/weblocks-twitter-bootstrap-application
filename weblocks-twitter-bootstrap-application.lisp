@@ -44,6 +44,13 @@
 
 (defmethod weblocks:weblocks-webapp-default-dependencies ((self twitter-bootstrap-webapp))
   (append 
+    (list 
+      (make-instance 'stylesheet-dependency :url "/bootstrap/css/bootstrap.css")
+      (make-instance 'stylesheet-dependency 
+                     :url "/pub/stylesheets/twitter-bootstrap.css" 
+                     :local-path (merge-pathnames 
+                                   "twitter-bootstrap.css"
+                                   (asdf-system-directory :weblocks-twitter-bootstrap-application))))
     (call-next-method)
     `((:script "twitter-bootstrap-dialog" :default t)
       ,(make-instance 'script-dependency 
@@ -89,13 +96,11 @@
   top: expression(documentElement.scrollTop + 'px');
 }
 </style>
-    <link href=\"{{webapp-files-prefix}}/bootstrap/css/bootstrap.css\" rel=\"stylesheet\" media=\"screen\">
-    <link href=\"{{webapp-files-prefix}}/pub/stylesheets/twitter-bootstrap.css\" rel=\"stylesheet\" media=\"screen\">
+    {{{header-content}}}
     {{#responsiveness-enabled-p}}
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
     <link href=\"{{webapp-files-prefix}}/bootstrap/css/bootstrap-responsive.css\" rel=\"stylesheet\">
     {{/responsiveness-enabled-p}}
-    {{{header-content}}}
   </head>
   <body>
     {{{body-content}}}
