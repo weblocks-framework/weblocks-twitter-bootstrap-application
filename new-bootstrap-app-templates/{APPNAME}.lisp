@@ -22,6 +22,7 @@
     :autostart nil                   ;; have to start the app manually
     :ignore-default-dependencies nil ;; accept the defaults
     :debug t
+    :js-backend :jquery
     )
 
 ;; Top level start & stop scripts
