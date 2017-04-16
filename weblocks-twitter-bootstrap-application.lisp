@@ -7,6 +7,8 @@
   (:metaclass weblocks:webapp-class))
 
 (defmethod initialize-webapp :before ((app twitter-bootstrap-webapp))
+  (weblocks-jquery-js::weblocks-webapp-init-dependencies-for-backend app :jquery)
+
   (weblocks-utils:require-assets 
     "https://raw.github.com/html/weblocks-assets/master/twitter-bootstrap/2.2.1/"
     :webapp app)
