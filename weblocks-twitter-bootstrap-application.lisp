@@ -44,6 +44,7 @@
 
 (defmethod weblocks:weblocks-webapp-default-dependencies ((self twitter-bootstrap-webapp))
   (append 
+    (weblocks-jquery-js::weblocks-webapp-dependencies-for-backend self :jquery)
     (list 
       (make-instance 'stylesheet-dependency :url "/bootstrap/css/bootstrap.css")
       (make-instance 'stylesheet-dependency 
